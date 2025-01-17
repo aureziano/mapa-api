@@ -1,0 +1,11 @@
+stages:
+  - build
+  - deploy
+
+build:
+  script:
+    - mvn clean package
+
+deploy:
+  script:
+    - docker-compose up --build -d

@@ -1,0 +1,46 @@
+/* Header.css */
+.header {
+    background-color: #f4f4f4; /* Cor de fundo neutra */
+    padding: 10px 20px;
+    position: fixed; /* Fixa o cabeçalho no topo */
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1000; /* Garante que o cabeçalho fique sempre visível */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Adiciona uma sombra suave */
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    color: #333; /* Cor do texto */
+}
+
+.header-username {
+    font-size: 16px;
+    font-weight: 500;
+    color: #555; /* Cor do nome do usuário */
+}
+
+.logout-button {
+    background-color: #007BFF; /* Cor do botão de logout */
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+.logout-button:hover {
+    background-color: #0056b3; /* Cor ao passar o mouse sobre o botão */
+}
+
+body {
+    padding-top: 60px; /* Espaçamento para que o conteúdo não fique embaixo do cabeçalho fixo */
+}

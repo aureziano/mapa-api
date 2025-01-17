@@ -1,0 +1,76 @@
+/* Estilo Geral */
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #f5af19, #f12711);
+    color: #333;
+}
+
+/* Container Principal */
+.manage-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Título */
+.manage-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #f12711;
+}
+
+/* Seções */
+.manage-section {
+    margin-bottom: 2rem;
+}
+
+/* Tabelas */
+.manage-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.manage-table th,
+.manage-table td {
+    border: 1px solid #ddd;
+    padding: 0.8rem;
+    text-align: left;
+}
+
+.manage-table th {
+    background: #f5af19;
+    color: #fff;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.manage-table tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.manage-table tr:hover {
+    background: #f1f1f1;
+}
+
+/* Botão de Excluir */
+.delete-button {
+    padding: 0.5rem 1rem;
+    background: #f12711;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.delete-button:hover {
+    background: #b71c1c;
+    transform: scale(1.05);
+}

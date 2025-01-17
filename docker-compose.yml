@@ -1,0 +1,70 @@
+version: '3.8'
+
+services:
+  # Frontend (React)
+  frontend:
+    build:
+      context: ./map-front
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  # Backend (Spring Boot + Tomcat)
+  backend:
+    build:
+      context: ./map-app
+      dockerfile: Dockerfile
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3310/teste
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=150202
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/areasdb
+      - SPRING_DATA_MONGODB_DATABASE=areasdb
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - mongodb
+    networks:
+      - app-network
+
+  # MySQL
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: 150202
+      MYSQL_DATABASE: teste
+    ports:
+      - "3310:3306"
+    networks:
+      - app-network
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  # MongoDB
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: areasdb
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+    volumes:
+      - mongodb_data:/data/db
+
+# Definir a rede compartilhada entre os contêineres
+networks:
+  app-network:
+    driver: bridge
+
+# Volumes persistentes para bancos de dados
+volumes:
+  mysql_data:
+  mongodb_data:

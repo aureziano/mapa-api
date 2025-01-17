@@ -1,0 +1,83 @@
+/* Estilo geral */
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #43cea2, #185a9d);
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Container do Dashboard */
+.dashboard-container {
+    text-align: center;
+    background: #fff;
+    color: #333;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 800px;
+}
+
+/* Título */
+.dashboard-title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Container de grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 colunas */
+    gap: 1.5rem; /* Espaço entre os blocos */
+    padding: 0 1rem;
+}
+
+/* Estilo dos blocos de cada botão (cards) */
+.dashboard-card {
+    background: #43cea2;
+    color: #fff;
+    padding: 2rem;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+/* Efeito de hover para os cards */
+.dashboard-card:hover {
+    background: #185a9d;
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilo do texto dentro dos cards */
+.dashboard-card p {
+    margin-top: 1rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* Responsividade para telas menores (menor que 768px) */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr); /* 2 colunas */
+    }
+}
+
+/* Responsividade para telas muito pequenas (menor que 480px) */
+@media (max-width: 480px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr; /* 1 coluna */
+    }
+}
