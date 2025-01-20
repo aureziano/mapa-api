@@ -1,15 +1,17 @@
 package aureziano.map_app.services;
 
-@Service
-public class UserService {
-    private final UserRepository userRepository;
 
-    @Autowired
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+import aureziano.map_app.dto.UserDto;
+import aureziano.map_app.entity.User;
 
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User not found"));
-    }
+import java.util.List;
+
+public interface UserService {
+    void saveUser(UserDto userDto);
+
+    User findUserByEmail(String email);
+
+    User findUserByCpf(String cpf);
+
+    List<UserDto> findAllUsers();
 }

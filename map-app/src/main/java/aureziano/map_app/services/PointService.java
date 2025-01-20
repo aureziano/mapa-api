@@ -1,5 +1,13 @@
 package aureziano.map_app.services;
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import aureziano.map_app.entity.Point;
+import aureziano.map_app.repository.PointRepository;
+
 @Service
 public class PointService {
     private final PointRepository pointRepository;

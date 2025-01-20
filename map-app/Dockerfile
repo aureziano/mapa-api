@@ -8,8 +8,11 @@ RUN apt-get update && apt-get install -y \
     netcat-openbsd \
     && apt-get clean
 
+ARG JAR_FILE=target/*.war  
+COPY ${JAR_FILE} app.war  
+
 # Copiar o arquivo .war gerado para o diretório webapps do Tomcat
-COPY target/map-app-0.0.1-SNAPSHOT.war /usr/local/tomcat/webapps/
+COPY app.war  /usr/local/tomcat/webapps/
 
 # # Copiar o script de inicialização
 # COPY init_ssh.sh /usr/local/tomcat/init_ssh.sh
