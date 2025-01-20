@@ -1,0 +1,8 @@
+# Normalizar finais de linha para arquivos de texto
+* text=auto
+
+# Excluir binários da normalização
+*.png binary
+*.jpg binary
+*.exe binary
+*.dll binary
