@@ -14,6 +14,7 @@ import './App.css';
 import { setupInterceptors } from './services/api'; // Importe a função setupInterceptors
 import ManageUsers from './components/ManageUsers';
 import { useNotification } from './components/NotificationProvider';
+import TestModal from './components/TesteModal';
 
 
 const App = () => {
@@ -24,18 +25,18 @@ const App = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         const token = localStorage.getItem('authToken');
-    
+
         if (!token) {
             console.warn('Nenhum token encontrado no localStorage.');
             // addNotification("Nenhum token encontrado no localStorage.", "Erro");
             navigate('/'); // Redireciona para a página de login se não houver token
             return;
         }
-    
+
         try {
             const decodedToken = jwtDecode(token);
             // console.log('Token decodificado no App:', decodedToken);
-    
+
             const currentTime = Date.now() / 1000;
             if (decodedToken.exp < currentTime) {
                 // addNotification("Token expirado.", "Erro");
@@ -51,7 +52,7 @@ const App = () => {
                 navigate('/'); // Redireciona para a página de login
                 return;
             }
-    
+
             setUser({
                 isLoggedIn: true,
                 email: decodedToken.sub || 'Email não fornecido',
@@ -64,7 +65,7 @@ const App = () => {
         }
         setupInterceptors(setUser, navigate);
     }, [navigate, setUser]); // Adicionei 'navigate' aqui.
-    
+
 
     const handleLoginSuccess = () => {
         // console.log('Login bem-sucedido.');
@@ -100,7 +101,7 @@ const App = () => {
             firstName: '',
         });
         localStorage.removeItem('authToken');
-        
+
     };
 
     return (
@@ -166,6 +167,13 @@ const App = () => {
                                 <ManageUsers />
                             </AdminRoute>
                         ) : null
+                    }
+                />
+
+                <Route
+                    path="/teste"
+                    element={
+                            <TestModal />
                     }
                 />
             </Routes>

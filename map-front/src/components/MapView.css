@@ -6,6 +6,7 @@
     display: flex;
     flex-direction: column; /* Alinha os filhos verticalmente */
     overflow: hidden;
+    position: relative;
 }
 
 
@@ -14,6 +15,7 @@
     /* height: calc(100% - 50px); Deixa espaço para o título, se necessário */
     border-radius: 10px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 0; /* Garante que o mapa fique atrás do modal */
 }
 
 
@@ -21,7 +23,7 @@
 .map-view-title {
     font-size: 2rem;
     text-align: center;
-    margin-top: 10; /* Remove margens superiores e inferiores */
+    margin-top: 0; /* Remove margens superiores e inferiores */
     margin-bottom: 0;
     padding: 0; /* Remove espaçamento interno */
     color: #4a90e2;

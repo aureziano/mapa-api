@@ -3,74 +3,288 @@ body {
     font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
-    background: linear-gradient(135deg, #f5af19, #f12711);
+    background: linear-gradient(135deg, #f5af19, #0905e6);
     color: #333;
+    overflow-x: hidden;
+}
+
+/* Classe que esconde elementos */
+.hidden {
+    display: none;
+}
+
+/* Botão desabilitado */
+.disabled {
+    pointer-events: none;
+    opacity: 0.5;
 }
 
 /* Container Principal */
-.manage-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 2rem;
-    background: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+.map-view-container {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    /* overflow: hidden; */
+    position: relative;
+    z-index: 0;
+    top: 88px;
 }
 
-/* Título */
-.manage-title {
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-    text-align: center;
-    color: #f12711;
-}
-
-/* Seções */
-.manage-section {
-    margin-bottom: 2rem;
-}
-
-/* Tabelas */
-.manage-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-}
-
-.manage-table th,
-.manage-table td {
-    border: 1px solid #ddd;
-    padding: 0.8rem;
-    text-align: left;
-}
-
-.manage-table th {
-    background: #f5af19;
-    color: #fff;
-    text-transform: uppercase;
-    font-weight: bold;
-}
-
-.manage-table tr:nth-child(even) {
-    background: #f9f9f9;
-}
-
-.manage-table tr:hover {
-    background: #f1f1f1;
-}
-
-/* Botão de Excluir */
-.delete-button {
-    padding: 0.5rem 1rem;
+/* Botão para abrir/fechar tabela */
+.toggle-table-btn {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    padding: 0.8rem 1.2rem;
     background: #f12711;
     color: #fff;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: all 0.3s ease;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
-.delete-button:hover {
+.toggle-table-btn:hover {
     background: #b71c1c;
     transform: scale(1.05);
+}
+
+/* Estilo para a sobreposição */
+.overlay {
+    position: fixed;
+    top: 90px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: flex;
+    justify-content: flex-end;
+    align-items: stretch;;
+}
+
+/* Modal Deslizante */
+.slide-modal {
+    background-color: rgba(9, 50, 153, 0.308) !important;
+    width: 30% !important;
+    max-height: 80vh;
+    height: auto;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+    animation: slide-in-right 0.3s ease-out;
+    display: flex;
+    flex-direction: column;
+    color: #fff;
+    position: relative;
+    padding: 90px 40px 10px 10px !important;
+}
+
+/* Animação do Modal */
+@keyframes slide-in-right {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Cabeçalho do Modal */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    /* margin-bottom: 10px; */
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #fff !important;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #fff !important;
+}
+
+.close-btn {
+    color: #fff !important;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+}
+
+/* Corpo do Modal */
+.modal-body {
+    flex: 1;
+    padding: 10px 0;
+    overflow: hidden;
+}
+
+/* Estilização do Formulário */
+.modal-body .form-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    
+}
+
+.modal-body label {
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.modal-body input,
+.modal-body textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    background: #fff;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+.modal-body input:focus,
+.modal-body textarea:focus {
+    border-color: #f12711;
+    box-shadow: 0 0 5px rgba(241, 39, 17, 0.5);
+}
+
+/* Rodapé do Modal */
+.modal-footer {
+    border-top: 1px solid #ddd;
+    padding-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-footer .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: center;
+}
+
+.modal-footer .btn-secondary {
+    background: #ddd;
+    color: #333;
+    transition: all 0.2s ease;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: #bbb;
+}
+
+.modal-footer .btn-primary {
+    background: #f12711;
+    color: #fff;
+    transition: all 0.2s ease;
+}
+
+.modal-footer .btn-primary:hover {
+    background: #b71c1c;
+}
+
+/* Estilos da Tabela */
+.table-modal {
+    position: fixed;
+    top: 30px;
+    left: 0;
+    width: 30%;
+    height: 100%;
+    background: rgba(19, 140, 209, 0.8);
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    padding: 60px 10px 40px 20px;
+    overflow-y: auto;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Corpo da Tabela */
+.table-modal .table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0px;
+    font-size: 0.95rem;
+}
+
+.table th,
+.table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.table th {
+    background-color: #2c3e50;
+    color: #fff;
+    font-weight: bold;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.table tbody tr:hover {
+    background-color: #f12711;
+    color: #fff;
+    transition: background-color 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+/* Opções com Ícones */
+.table-options {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    color: #2c3e50;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+.icon-btn:hover {
+    background-color: #f12711;
+    color: #fff;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .slide-modal,
+    .table-modal {
+        width: 100%;
+        /* padding: 20px; */
+    }
+
+    .toggle-table-btn {
+        top: 15px; 
+        right: 15px;
+    }
 }

@@ -14,7 +14,6 @@ export const NotificationProvider = ({ children }) => {
     const addNotification = (message, type = "info", duration = 3000) => {
         const id = Date.now();
         setNotifications((prev) => [...prev, { id, message, type }]);
-
         // Remove a notificação automaticamente após o tempo especificado
         setTimeout(() => {
             setNotifications((prev) => prev.filter((n) => n.id !== id));

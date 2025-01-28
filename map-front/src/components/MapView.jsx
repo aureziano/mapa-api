@@ -1,66 +1,59 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './MapView.css';
 import api from '../services/api';
-import MiniMapControl from './MinimapControl'; // Usa o GenericMapView
-import axios from 'axios'; // Biblioteca para chamadas HTTP
+import GenericMapView, { formatPolygons } from './GenericMapView';
 
 const MapView = () => {
-    const [polygons, setPolygons] = useState([]);
+    const [statePolygons, setStatePolygons] = useState([]);
+    const [regionPolygons, setRegionPolygons] = useState([]);
+    const [isMapReady, setIsMapReady] = useState(false);
+    
+    // Inicialize o featureGroupRef com useRef
+    const featureGroupRef = useRef(null);
 
-    // Busca dados para os polígonos
+    // Busca dados para os polígonos de estado
     useEffect(() => {
-        const fetchPolygons = async () => {
+        const fetchStatePolygons = async () => {
             try {
-                const areasResponse = await api.get('/areas');
-                const formattedPolygons = areasResponse.data.map((area) => ({
-                    coordinates: JSON.parse(area.geoJson), // Assumindo que os dados já são GeoJSON válidos
-                    color: 'blue',
-                    fillColor: 'rgba(0, 0, 255, 0.3)',
-                }));
-                setPolygons(formattedPolygons);
+                const response = await api.get('/api/mongoData/polygonsEstado');
+                const formattedPolygons = formatPolygons(response.data);  // Chama a função formatPolygons importada
+                setStatePolygons(formattedPolygons);
             } catch (error) {
-                console.error('Erro ao carregar os dados do mapa:', error);
+                console.error('Erro ao carregar os polígonos de estado:', error);
             }
         };
-        fetchPolygons();
+
+        fetchStatePolygons();
     }, []);
 
-    // Função para converter coordenadas de GeoJSON para string
-    const convertCoordinatesToString = (coordinates) => {
-        return coordinates
-            .map((polygon) => 
-                polygon.map(([longitude, latitude]) => `${longitude},${latitude}`).join(" ")
-            )
-            .join(";");
-    };
+    // Busca dados para os polígonos de região
+    useEffect(() => {
+        const fetchRegionPolygons = async () => {
+            try {
+                const response = await api.get('/api/mongoData/polygons');
+                const formattedPolygons = formatPolygons(response.data);  // Chama a função formatPolygons importada
+                setRegionPolygons(formattedPolygons);
+            } catch (error) {
+                console.error('Erro ao carregar os polígonos de região:', error);
+            }
+        };
 
-    // Função para enviar as coordenadas ao banco
-    const handleSaveCoordinates = async () => {
-        // Exemplo de coordenadas extraídas do polígono carregado
-        const coordinatesString = convertCoordinatesToString(polygons.map(p => p.coordinates));
-        
-        try {
-            const response = await axios.post('http://localhost:8080/areaCoordinates', {
-                coordinates: coordinatesString,
-            });
-            console.log("Coordenadas salvas:", response.data);
-            alert("Coordenadas salvas no banco com sucesso!");
-        } catch (error) {
-            console.error("Erro ao salvar as coordenadas:", error);
-            alert("Falha ao salvar as coordenadas.");
-        }
-    };
+        fetchRegionPolygons();
+    }, []);
 
     return (
         <div className="map-view-container">
             <h1 className="map-view-title">Visualização de Mapas</h1>
-            <MiniMapControl polygons={polygons} /> {/* Passa os polígonos para o GenericMapView */}
-            
-            {/* Botão para salvar as coordenadas */}
-            <button onClick={handleSaveCoordinates} className="save-button">
-                Salvar Coordenadas no Banco
-            </button>
+            <GenericMapView
+                statePolygons={statePolygons}
+                regionPolygons={regionPolygons}
+                enableDrawControl={false}
+                enableMiniMap={true}
+                isMapReady={isMapReady}
+                setIsMapReady={setIsMapReady}
+                featureGroupRef={featureGroupRef}
+            />
         </div>
     );
 };

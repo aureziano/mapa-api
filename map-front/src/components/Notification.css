@@ -25,12 +25,17 @@
 
 /* Estilo para notificações de sucesso (azul) */
 .notification.sucess {
-    background-color: #007bff;  /* Azul */
+    background-color: #007bff !important;  /* Azul */
 }
 
 /* Estilo para notificações de aviso (amarelo) */
 .notification.warn {
     background-color: #ffc107;  /* Amarelo */
+}
+
+/* Estilo para notificações de informacao (verde) */
+.notification.info {
+    background-color: #1e5a32b2;  /* verde */
 }
 
 /* Estilo para notificações de erro (vermelho) */

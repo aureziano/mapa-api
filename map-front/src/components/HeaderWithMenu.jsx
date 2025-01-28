@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { FaHome, FaMapMarkedAlt, FaCogs, FaUsers } from 'react-icons/fa'; // Ícones para os itens
+import { FaHome, FaMapMarkedAlt, FaCogs, FaUsers, FaBars  } from 'react-icons/fa'; // Ícones para os itens
 import './HeaderWithMenu.css';
 
 const HeaderWithMenu = ({ username, role, cpf, firstName, onLogout }) => {
@@ -44,7 +44,7 @@ const HeaderWithMenu = ({ username, role, cpf, firstName, onLogout }) => {
                 <div className="menu-container" ref={menuRef}>
                     {/* Botão para abrir/fechar o menu */}
                     <button className="menu-button" onClick={toggleMenu}>
-                        {isMenuOpen ? 'Fechar Menu' : 'Abrir Menu'}
+                        <FaBars color={isMenuOpen ? 'green' : '#ffff'}/>
                     </button>
 
                     {/* Texto do usuário abaixo do botão */}

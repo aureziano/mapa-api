@@ -56,7 +56,7 @@
     align-items: flex-end;
     margin-left: auto; */
 .menu-button {
-    background-color: #007BFF;
+    background-color: #72b2f1e3;
     color: white;
     border: none;
     padding: 8px 16px;
@@ -131,7 +131,7 @@
 }
 
 body {
-    padding-top: 60px; /* Espaçamento para o conteúdo não ficar embaixo do cabeçalho fixo */
+    padding-top: 0px; /* Espaçamento para o conteúdo não ficar embaixo do cabeçalho fixo */
     margin: 0; /* Remove margens padrões */
 }
 

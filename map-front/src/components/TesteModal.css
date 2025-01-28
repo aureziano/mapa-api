@@ -1,0 +1,87 @@
+/* Estilo para a sobreposição */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* Fundo semi-transparente */
+  z-index: 1000;
+  display: flex;
+  justify-content: flex-end; /* Alinha o modal à direita */
+  align-items: stretch; /* Faz o modal ocupar toda a altura */
+}
+
+/* Estilo do modal deslizante */
+.slide-modal {
+  background-color: white;
+  width: 400px; /* Largura do modal */
+  height: 100%; /* Ocupa toda a altura da tela */
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2); /* Sombra no lado esquerdo */
+  padding: 20px;
+  animation: slide-in-right 0.3s ease-out;
+  display: flex;
+  flex-direction: column; /* Alinhamento interno vertical */
+}
+
+/* Animação para o modal deslizar */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%); /* Começa fora da tela, do lado direito */
+  }
+  to {
+    transform: translateX(0); /* Entra na tela */
+  }
+}
+
+/* Cabeçalho do modal */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #333;
+  cursor: pointer;
+}
+
+/* Corpo do modal */
+.modal-body {
+  flex: 1; /* Ocupa o espaço restante */
+  padding: 20px 0;
+  overflow-y: auto; /* Scroll se necessário */
+}
+
+/* Estilo da grade */
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 colunas de tamanho igual */
+  gap: 10px; /* Espaçamento entre os itens */
+}
+
+.grid-item {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+/* Rodapé do modal */
+.modal-footer {
+  border-top: 1px solid #ddd;
+  padding-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}

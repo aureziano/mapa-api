@@ -6,8 +6,10 @@ const api = axios.create({
     withCredentials: true, // Para enviar cookies
     headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken') == null ? '': localStorage.getItem('authToken')}`, // Adiciona o token JWT ao cabeçalho;
     },
 });
+
 
 // Função para adicionar o token ao cabeçalho de cada requisição
 export const setAuthToken = (token) => {

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './MapView.css';
 import api from '../services/api';
-import MiniMapControl from './MinimapControl'; // Usa o GenericMapView
+import MiniMapControl from './GenericMapView'; // Usa o GenericMapView
 
 const MapView = () => {
     const [polygons, setPolygons] = useState([]);
