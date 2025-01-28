@@ -28,28 +28,6 @@ const ManagePointsAreas = () => {
   const featureGroupRef = useRef(null);
 
 
-  // // Usando useEffect para garantir que os layers sejam carregados corretamente
-  // useEffect(() => {
-  //   if (featureGroupRef.current) {
-  //     const layers = featureGroupRef.current.getLayers();
-  //     console.log('Verificando layers:', layers);
-
-  //     if (layers.length > 0) {
-  //       setIsLayersReady(true);  // Atualiza quando os layers estiverem prontos
-  //     }
-  //   }
-  // }, [featureGroupRef]);  // Quando o FeatureGroup é alterado, verifica os layers
-
-  // // Agora, usar o isLayersReady para garantir que os layers estão prontos
-  // useEffect(() => {
-  //   if (isLayersReady) {
-  //     console.log('Layers prontos. Você pode editar os polígonos.');
-  //   } else {
-  //     console.log('Aguardando layers no FeatureGroup...');
-  //   }
-  // }, [isLayersReady]);
-
-
   useEffect(() => {
     const fetchRegionPolygons = async () => {
       try {
@@ -89,7 +67,7 @@ const ManagePointsAreas = () => {
 
   const handleSaveArea = async () => {
     if (!name || !description) {
-      alert('Preencha todos os campos!');
+      addNotification('Preencha todos os campos!', 'error');
       return;
     }
 
@@ -99,7 +77,16 @@ const ManagePointsAreas = () => {
         editedPolygon || currentPolygon.coordinates // Use as coordenadas editadas se disponíveis
       );
 
+      if (!token) {
+        addNotification('Token de autenticação não encontrado.', 'error');
+        return;
+      }
+
+      // Desativa o botão ou exibe um spinner (se aplicável)
+      setLoading(true);
+
       if (editMode) {
+        // Atualiza a área existente
         await api.put(
           `/api/areas/${currentPolygon.mongoId}`,
           { name, description, coordinatesString },
@@ -107,6 +94,7 @@ const ManagePointsAreas = () => {
         );
         addNotification('Área editada com sucesso!', 'success');
       } else {
+        // Salva uma nova área
         const mongoResponse = await api.post(
           '/api/areas/areaCoordinates',
           { coordinatesString },
@@ -122,14 +110,18 @@ const ManagePointsAreas = () => {
         addNotification('Área salva com sucesso!', 'success');
       }
 
+      // Atualiza a lista de polígonos exibidos
       const response = await api.get('/api/mongoData/polygons', {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setPolygons(formatPolygons(response.data || []));
-      handleCancel();
+      handleCancel(); // Fecha o modal
     } catch (error) {
       console.error('Erro ao salvar área:', error);
+      addNotification('Erro ao salvar área. Tente novamente.', 'error');
+    } finally {
+      setLoading(false); // Reativa o botão/spinner
     }
   };
 
@@ -150,8 +142,13 @@ const ManagePointsAreas = () => {
       addNotification('Erro ao calcular o centróide da área.', 'error');
       return;
     }
+
+    // Preenche os estados com os dados do polígono
     setSelectedPolygon({ ...polygon, centroid });
+    setName(polygon.name || ''); // Nome da área, se disponível
+    setDescription(polygon.description || ''); // Descrição, se disponível
     setEditMode(true);
+    setShowForm(true); // Abre o modal
     addNotification('Editando área selecionada!', 'info');
   };
 
@@ -189,12 +186,11 @@ const ManagePointsAreas = () => {
   };
 
   const handleCancel = () => {
-    setShowForm(false);
-    setCurrentPolygon(null);
     setName('');
     setDescription('');
-    setAreaInCreation(false);
-    setEditMode(false);
+    setShowForm(false); // Fecha o modal
+    setEditMode(false); // Sai do modo de edição
+    setSelectedPolygon(null); // Reseta o polígono selecionado
   };
 
   const toggleTable = () => {

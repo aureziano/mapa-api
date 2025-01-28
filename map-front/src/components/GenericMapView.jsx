@@ -15,6 +15,7 @@ import 'leaflet-minimap/dist/Control.MiniMap.min.css';
 import 'leaflet-minimap';
 import 'leaflet-draw';
 import { EditControl } from 'react-leaflet-draw';
+import { useNotification } from './NotificationProvider';
 
 
 
@@ -111,26 +112,29 @@ const GenericMapView = ({
     setEditMode 
 }) => {
     // Ref callback para garantir a inicialização correta
+    const { addNotification } = useNotification();
     const [editableLayer, setEditableLayer] = useState(null);
-    const [activeLayer, setActiveLayer] = useState(null); // Camada ativa para edição
 
-    // Atualizar a camada de edição quando o modo de edição for ativado
     useEffect(() => {
-        if (editMode && selectedPolygon) {
-            const layer = L.polygon(selectedPolygon.coordinates);
+        // Ativar edição no polígono selecionado
+        if (editMode && selectedPolygon && featureGroupRef.current) {
+            // Remove qualquer camada de edição anterior
+            if (editableLayer) {
+                featureGroupRef.current.removeLayer(editableLayer);
+            }
 
-            // Adiciona o layer ao FeatureGroup
+            // Criar um novo layer para o polígono selecionado
+            const layer = L.polygon(selectedPolygon.coordinates, {
+                color: 'red',
+                weight: 3,
+                fillColor: 'rgba(255, 0, 0, 0.3)'
+            });
+
             featureGroupRef.current.addLayer(layer);
             setEditableLayer(layer);
 
-            // Crie um FeatureGroup para edição
-            const editableLayers = new L.FeatureGroup();
-            editableLayers.addLayer(layer);
-
-            // Tenta ativar a edição diretamente no Layer
-            if (featureGroupRef.current?.leafletElement?.editTools) {
-                featureGroupRef.current?.leafletElement?.editTools?.startEdit(editableLayers); // Inicia a edição
-            }
+            // Ativar edição no layer criado
+            layer.editing.enable();
         }
     }, [editMode, selectedPolygon]);
 
@@ -144,15 +148,14 @@ const GenericMapView = ({
                         color="red"
                         fillColor="rgba(255, 0, 0, 0.3)"
                         weight={3}
-
                     />
                 )}
                 {polygons.map((polygon, idx) => (
                     <Polygon
                         key={`${layerName}-${idx}`}
                         positions={polygon.coordinates}
-                        color={polygon.color}
-                        fillColor={polygon.fillColor}
+                        color={polygon.color || 'blue'}
+                        fillColor={polygon.fillColor || 'rgba(0, 0, 255, 0.3)'}
                         onClick={() => handlePolygonClick(polygon.mongoId)}
                     />
                 ))}
@@ -168,35 +171,35 @@ const GenericMapView = ({
             );
             return {
                 coordinates,
-                mongoId: layer.mongoId,
+                mongoId: selectedPolygon?.mongoId, // Preserva o ID do polígono
             };
         });
         setEditedPolygon(updatedPolygons);
+        addNotification('Polígono atualizado com sucesso!', 'success');
     };
 
     const handlePolygonClick = (mongoId) => {
-        // Lógica para lidar com o clique no polígono, como selecionar o polígono, por exemplo
-        console.log('Polígono clicado:', mongoId);
+        const polygon = regionPolygons.find((p) => p.mongoId === mongoId);
 
-        // Se você deseja selecionar o polígono ao clicar:
-        const selectedPolygon = regionPolygons.find((polygon) => polygon.mongoId === mongoId);
-        setSelectedPolygon(selectedPolygon); // Supondo que você tenha uma função setSelectedPolygon
+        if (polygon) {
+            setSelectedPolygon(polygon);
+            setEditMode(true);
+            addNotification('Editando o polígono selecionado!', 'info');
+        } else {
+            console.error('Polígono não encontrado:', mongoId);
+        }
     };
 
 
     const handleCreatedPolygon = (event) => {
         const { layer } = event;
 
-        // Certifique-se de que a referência está inicializada
         if (featureGroupRef.current) {
             const coordinates = layer.getLatLngs().map((ring) =>
                 ring.map((latlng) => [latlng.lat, latlng.lng])
             );
             onPolygonCreated({ coordinates });
-
-            // Adiciona o layer ao FeatureGroup
             featureGroupRef.current.addLayer(layer);
-            console.log('Polígono adicionado ao FeatureGroup:', layer);
         } else {
             console.error('FeatureGroupRef não está inicializado.');
         }
@@ -234,11 +237,11 @@ const GenericMapView = ({
                 </LayersControl.Overlay>
 
                 <LayersControl.Overlay checked name="Polígonos de Região">
-                    {renderPolygons(regionPolygons, 'region')}
+                    {renderPolygons(regionPolygons, 'region', selectedPolygon)}
                 </LayersControl.Overlay>
 
                 {enableDrawControl && (
-                    <FeatureGroup ref={featureGroupRef}>
+                    <FeatureGroup ref={featureGroupRef} onEdited={handleEditPolygon}>
                         <EditControl
                             position="topright"
                             onCreated={handleCreatedPolygon}
