@@ -51,6 +51,8 @@ public class SecurityConfig {
                         .requestMatchers("/admin/**").hasRole("ADMIN") // Apenas ADMIN pode acessar
                         .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN") // USER e ADMIN podem acessar
                         .requestMatchers("/api/users").hasRole("ADMIN") // Apenas ADMIN pode acessar usuários
+                        .requestMatchers("/api/areas/*").hasAnyRole("USER", "ADMIN") // Apenas ADMIN pode acessar usuários
+                        .requestMatchers("/api/mongoData/*").permitAll() // Apenas ADMIN pode acessar usuários
                         .requestMatchers("/api-docs/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll() // Swagger público
                         .anyRequest().authenticated() // Qualquer outra rota requer autenticação
                 )

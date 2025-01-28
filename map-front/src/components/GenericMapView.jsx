@@ -18,7 +18,6 @@ import { EditControl } from 'react-leaflet-draw';
 import { useNotification } from './NotificationProvider';
 
 
-
 // Função para formatar os polígonos
 const formatPolygons = (data) => {
     return data
@@ -37,6 +36,7 @@ const formatPolygons = (data) => {
             }
 
             return {
+                id: polygon.id || '',
                 coordinates,
                 color: polygon.color || 'blue',
                 fillColor: polygon.fillColor || 'rgba(0, 0, 255, 0.3)',
@@ -59,12 +59,38 @@ const calculateCentroid = (coordinates) => {
     return [totalLat / totalPoints, totalLng / totalPoints];
 };
 
+const getValidatedCentroid = (polygon) => {
+    const centroid = calculateCentroid(polygon.coordinates);
+    if (!centroid || !Array.isArray(centroid) || centroid.length !== 2) {
+        console.error('Centróide inválido.');
+        return null;
+    }
+    return centroid;
+};
+
+const areCoordinatesDifferent = (coordinates1, coordinates2) => {
+    if (coordinates1.length !== coordinates2.length) {
+        return true;
+    }
+
+    for (let i = 0; i < coordinates1.length; i++) {
+        const point1 = coordinates1[i];
+        const point2 = coordinates2[i];
+
+        // Verifique se a diferença nas coordenadas é significativa (ajuste a tolerância conforme necessário)
+        if (Math.abs(point1[0] - point2[0]) > 0.000001 || Math.abs(point1[1] - point2[1]) > 0.000001) {
+            return true;
+        }
+    }
+    return false;
+};
+
 const FocusOnSelectedPolygon = ({ selectedPolygon }) => {
     const map = useMap();
 
     useEffect(() => {
         if (selectedPolygon && selectedPolygon.centroid) {
-            map.setView(selectedPolygon.centroid, 14); // Centraliza e ajusta o zoom
+            map.setView(selectedPolygon.centroid, 12); // Centraliza e ajusta o zoom
         }
     }, [selectedPolygon, map]);
 
@@ -103,13 +129,17 @@ const GenericMapView = ({
     regionPolygons,
     enableDrawControl,
     selectedPolygon,
+    setPolygons,
+    polygons,
     setSelectedPolygon,
+    currentPolygon,
+    setCurrentPolygon,
     setEditedPolygon,
     isMapReady,
     setIsMapReady,
     featureGroupRef,
     editMode,
-    setEditMode 
+    setEditMode
 }) => {
     // Ref callback para garantir a inicialização correta
     const { addNotification } = useNotification();
@@ -127,7 +157,7 @@ const GenericMapView = ({
             const layer = L.polygon(selectedPolygon.coordinates, {
                 color: 'red',
                 weight: 3,
-                fillColor: 'rgba(255, 0, 0, 0.3)'
+                fillColor: 'rgba(255, 0, 0, 0.3)',
             });
 
             featureGroupRef.current.addLayer(layer);
@@ -135,10 +165,33 @@ const GenericMapView = ({
 
             // Ativar edição no layer criado
             layer.editing.enable();
+
+            // Adicionar listener para capturar alterações no polígono
+            layer.on('edit', () => {
+                const updatedCoordinates = layer.getLatLngs().map((ring) =>
+                    ring.map((latlng) => [latlng.lat, latlng.lng])
+                );
+
+                // Atualizar o estado com as novas coordenadas
+                const updatedPolygon = {
+                    ...selectedPolygon,
+                    coordinates: updatedCoordinates,
+                };
+
+                setSelectedPolygon(updatedPolygon); // Atualiza o polígono selecionado
+                setEditedPolygon(updatedPolygon); // Mantém o estado de edição sincronizado
+            });
+
+            return () => {
+                // Limpar o listener ao desmontar ou quando o polígono mudar
+                layer.off('edit');
+            };
         }
     }, [editMode, selectedPolygon]);
 
     const renderPolygons = (polygons = [], layerName, selectedPolygon = null) => {
+        const safePolygons = Array.isArray(polygons) ? polygons : [polygons];
+
         return (
             <LayerGroup key={layerName}>
                 {selectedPolygon && (
@@ -150,7 +203,7 @@ const GenericMapView = ({
                         weight={3}
                     />
                 )}
-                {polygons.map((polygon, idx) => (
+                {safePolygons.map((polygon, idx) => (
                     <Polygon
                         key={`${layerName}-${idx}`}
                         positions={polygon.coordinates}
@@ -169,13 +222,28 @@ const GenericMapView = ({
             const coordinates = layer.getLatLngs().map((ring) =>
                 ring.map((latlng) => [latlng.lat, latlng.lng])
             );
+
             return {
                 coordinates,
-                mongoId: selectedPolygon?.mongoId, // Preserva o ID do polígono
+                mongoId: selectedPolygon?.mongoId,
+                name: selectedPolygon?.name,
+                description: selectedPolygon?.description,
             };
         });
-        setEditedPolygon(updatedPolygons);
-        addNotification('Polígono atualizado com sucesso!', 'success');
+
+        // Atualizar selectedPolygon com as novas coordenadas
+        setSelectedPolygon({
+            ...selectedPolygon,
+            coordinates: updatedPolygons[0].coordinates,
+        });
+
+        // Atualizar currentPolygon com as novas coordenadas
+        setCurrentPolygon({
+            ...currentPolygon,
+            coordinates: updatedPolygons[0].coordinates,
+        });
+
+        console.log('Polígono editado', updatedPolygons[0]);
     };
 
     const handlePolygonClick = (mongoId) => {
@@ -190,8 +258,8 @@ const GenericMapView = ({
         }
     };
 
-
     const handleCreatedPolygon = (event) => {
+        console.log("veio aqui!!!!")
         const { layer } = event;
 
         if (featureGroupRef.current) {
@@ -241,10 +309,15 @@ const GenericMapView = ({
                 </LayersControl.Overlay>
 
                 {enableDrawControl && (
-                    <FeatureGroup ref={featureGroupRef} onEdited={handleEditPolygon}>
+                    <FeatureGroup
+                        ref={featureGroupRef}
+                        onEdited={(event) => handleEditPolygon(event)}
+                    >
+                        {/* {console.log('FeatureGroup ref:', featureGroupRef.current)} Verifica a referência */}
                         <EditControl
                             position="topright"
                             onCreated={handleCreatedPolygon}
+                            onEdited={handleEditPolygon}
                             draw={{
                                 polygon: true,
                                 polyline: false,
@@ -253,9 +326,14 @@ const GenericMapView = ({
                                 marker: false,
                                 circlemarker: false,
                             }}
+                            edit={{
+                                featureGroup: featureGroupRef.current, // Camadas disponíveis para edição
+                            }}
                         />
                     </FeatureGroup>
+
                 )}
+
 
                 {enableMiniMap && <MiniMapControl />}
 
@@ -266,4 +344,4 @@ const GenericMapView = ({
 };
 
 export default GenericMapView;
-export { formatPolygons, calculateCentroid };
+export { formatPolygons, calculateCentroid, getValidatedCentroid, areCoordinatesDifferent };

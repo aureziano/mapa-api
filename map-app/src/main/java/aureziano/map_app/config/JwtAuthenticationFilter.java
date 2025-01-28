@@ -20,7 +20,7 @@ import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtil.class);
 
     private final JwtTokenUtil jwtTokenUtil;
     private final UserDetailsService userDetailsService;
@@ -38,11 +38,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            logger.info("authorizationHeader : {}", authorizationHeader);
             token = authorizationHeader.substring(7); // Remove "Bearer "
         }
-
+        // logger.info("token inicial : {}", token);
         try {
-            if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (token != null && !token.isEmpty() && SecurityContextHolder.getContext().getAuthentication() == null) {
                 String cpf = jwtTokenUtil.extractCpfFromToken(token);
                 List<String> roles = jwtTokenUtil.extractRoleFromToken(token); // Extrapola as roles do token
 

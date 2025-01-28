@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from 'react-bootstrap';
-import { FaTimes, FaEdit, FaEye, FaTrash, FaAtlas } from 'react-icons/fa';
+import { FaTimes, FaEdit, FaEye, FaTrash, FaAtlas, FaPen, FaSave } from 'react-icons/fa';
 import api from '../services/api';
 import { useNotification } from './NotificationProvider';
-import GenericMapView, { formatPolygons, calculateCentroid } from './GenericMapView';
+import GenericMapView, { formatPolygons, calculateCentroid, getValidatedCentroid, areCoordinatesDifferent } from './GenericMapView';
 import L from 'leaflet';
 import './ManagePointsAreas.css';
 // import { useMap } from 'react-leaflet';
@@ -14,16 +14,15 @@ const ManagePointsAreas = () => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [currentPolygon, setCurrentPolygon] = useState(null);
-  const [areaInCreation, setAreaInCreation] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editedPolygon] = useState(null);
+  const [loading, setLoading] = useState(false); // Adicionando o estado para loading
   const { addNotification } = useNotification();
-
   const [selectedPolygon, setSelectedPolygon] = useState(null);
   const [isMapReady, setIsMapReady] = useState(false);
-
-  const [isLayersReady, setIsLayersReady] = useState(false);
+  const [areaInCreation, setAreaInCreation] = useState(false);
+  const [originalCoordinates, setOriginalCoordinates] = useState(null);
 
   const featureGroupRef = useRef(null);
 
@@ -34,7 +33,7 @@ const ManagePointsAreas = () => {
         const response = await api.get('/api/mongoData/polygons');
         const formattedPolygons = formatPolygons(response.data || []).map((polygon) => ({
           ...polygon,
-          mongoId: polygon.mongoId,  // Adicionando o mongoId para cada polígono
+          mongoId: polygon.mongoId
         }));
         setPolygons(formattedPolygons);
       } catch (error) {
@@ -45,97 +44,95 @@ const ManagePointsAreas = () => {
     fetchRegionPolygons();
   }, []);
 
+  useEffect(() => {
+    if (selectedPolygon && JSON.stringify(selectedPolygon) !== JSON.stringify(currentPolygon)) {
+      console.log('Atualizando currentPolygon');
+      setCurrentPolygon({ ...selectedPolygon });
+    }
+  }, [selectedPolygon, currentPolygon]); // Comparação profunda
+  
+  setPolygons((prevPolygons) => {
+    const updatedPolygons = prevPolygons.map((polygon) =>
+      polygon.mongoId === selectedPolygon.mongoId
+        ? { ...polygon, coordinates: selectedPolygon.coordinates }
+        : polygon
+    );
+  
+    console.log("Polígonos atualizados:", updatedPolygons); // Verifique o valor de updatedPolygons aqui
+  
+    return updatedPolygons;
+  });
+  
+
   // No método de criação do polígono dentro de GenericMapView:
   const handlePolygonCreated = (polygonData) => {
     const newPolygon = {
       coordinates: polygonData.coordinates,
       color: 'blue',
       fillColor: 'rgba(0, 0, 255, 0.3)',
-      mongoId: polygonData.id,  // Aqui estamos passando o mongoId para a camada
+      mongoId: polygonData.id,
     };
 
     const layer = L.polygon(newPolygon.coordinates, {
       color: newPolygon.color,
       fillColor: newPolygon.fillColor,
-      mongoId: newPolygon.mongoId, // Atribuindo mongoId ao layer
+      mongoId: newPolygon.mongoId,
     });
 
     featureGroupRef.current.addLayer(layer);
     setPolygons([...polygons, newPolygon]);
+    setCurrentPolygon(newPolygon);
+    setShowForm(true); // Abre o formulário automaticamente
+    setEditMode(false); // Garante que não esteja no modo de edição
   };
-
 
   const handleSaveArea = async () => {
-    if (!name || !description) {
-      addNotification('Preencha todos os campos!', 'error');
-      return;
-    }
+          if (!currentPolygon) {
+              addNotification('Nenhum polígono selecionado para salvar.', 'error');
+              return;
+          }
+  
+          // Atualiza a lista de polígonos na tabela
+          setPolygons((prevPolygons) =>
+              prevPolygons.map((polygon) =>
+                  polygon.mongoId === currentPolygon.mongoId
+                      ? { ...polygon, coordinates: currentPolygon.coordinates }
+                      : polygon
+              )
+          );
+  
+          // Aqui, você pode realizar a atualização no servidor (API) para salvar as alterações no banco de dados
+          try {
+              const token = localStorage.getItem('authToken');
+              if (!token) {
+                  addNotification('Token de autenticação não encontrado.', 'error');
+                  return;
+              }
+  
+              // Salvar as alterações no banco (exemplo de chamada de API)
+              await api.put(
+                  `/api/areas/${currentPolygon.mongoId}`,
+                  {
+                      coordinatesString: JSON.stringify(currentPolygon.coordinates),
+                      name: currentPolygon.name,
+                      description: currentPolygon.description,
+                  },
+                  { headers: { Authorization: `Bearer ${token}` } }
+              );
+  
+              addNotification('Polígono salvo com sucesso!', 'success');
+          } catch (error) {
+              console.error('Erro ao salvar polígono:', error);
+              addNotification('Erro ao salvar polígono.', 'error');
+          }
+      };
 
-    try {
-      const token = localStorage.getItem('authToken');
-      const coordinatesString = JSON.stringify(
-        editedPolygon || currentPolygon.coordinates // Use as coordenadas editadas se disponíveis
-      );
-
-      if (!token) {
-        addNotification('Token de autenticação não encontrado.', 'error');
-        return;
-      }
-
-      // Desativa o botão ou exibe um spinner (se aplicável)
-      setLoading(true);
-
-      if (editMode) {
-        // Atualiza a área existente
-        await api.put(
-          `/api/areas/${currentPolygon.mongoId}`,
-          { name, description, coordinatesString },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        addNotification('Área editada com sucesso!', 'success');
-      } else {
-        // Salva uma nova área
-        const mongoResponse = await api.post(
-          '/api/areas/areaCoordinates',
-          { coordinatesString },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        const mongoId = mongoResponse.data.id;
-        await api.post(
-          '/api/areas',
-          { name, description, mongoId },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        addNotification('Área salva com sucesso!', 'success');
-      }
-
-      // Atualiza a lista de polígonos exibidos
-      const response = await api.get('/api/mongoData/polygons', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      setPolygons(formatPolygons(response.data || []));
-      handleCancel(); // Fecha o modal
-    } catch (error) {
-      console.error('Erro ao salvar área:', error);
-      addNotification('Erro ao salvar área. Tente novamente.', 'error');
-    } finally {
-      setLoading(false); // Reativa o botão/spinner
-    }
-  };
-
-  const updatePolygonInBackend = async (updatedPolygon) => {
-    try {
-      const response = await api.put(`/api/mongoData/updatePolygon/${updatedPolygon.mongoId}`, updatedPolygon);
-      console.log('Polígono atualizado:', response.data);
-    } catch (error) {
-      console.error('Erro ao atualizar o polígono:', error);
-    }
+  const handleOpenEditForm = () => {
+    setShowForm(true); // Abre o formulário manualmente
   };
 
   const handleEdit = (polygon) => {
-    const centroid = calculateCentroid(polygon.coordinates);
+    const centroid = getValidatedCentroid(polygon);
 
     if (!centroid || !Array.isArray(centroid) || centroid.length !== 2) {
       console.error('Centróide inválido.');
@@ -143,17 +140,30 @@ const ManagePointsAreas = () => {
       return;
     }
 
-    // Preenche os estados com os dados do polígono
-    setSelectedPolygon({ ...polygon, centroid });
-    setName(polygon.name || ''); // Nome da área, se disponível
-    setDescription(polygon.description || ''); // Descrição, se disponível
+    setOriginalCoordinates(polygon.coordinates);
+    const updatedPolygon = {
+      ...polygon,
+      centroid,
+    };
+
+
+    setSelectedPolygon(updatedPolygon);
+    setCurrentPolygon(updatedPolygon);
+
+    // Armazena as coordenadas originais antes da edição
+    setOriginalCoordinates([...polygon.coordinates]);
+
+    setName(polygon.name || '');
+    setDescription(polygon.description || '');
     setEditMode(true);
-    setShowForm(true); // Abre o modal
+    setShowForm(true);
+
     addNotification('Editando área selecionada!', 'info');
   };
 
   const handleView = (polygon) => {
-    const centroid = calculateCentroid(polygon.coordinates);
+    setEditMode(false); // Desativa o modo de edição
+    const centroid = getValidatedCentroid(polygon);
 
     if (!centroid || !Array.isArray(centroid) || centroid.length !== 2) {
       console.error('Centróide inválido.');
@@ -163,10 +173,9 @@ const ManagePointsAreas = () => {
 
     // Atualizar o polígono selecionado
     setSelectedPolygon({ ...polygon, centroid });
-
+    setShowForm(false); // Garante que o formulário não seja exibido
     addNotification('Visualizando área selecionada!', 'info');
   };
-
 
   const handleDelete = async (polygon) => {
     if (window.confirm('Tem certeza que deseja excluir esta área?')) {
@@ -177,7 +186,7 @@ const ManagePointsAreas = () => {
         });
 
         setPolygons(polygons.filter((p) => p.mongoId !== polygon.mongoId));
-        addNotification('Área excluída com sucesso!', 'success');
+        addNotification('Área excluída com sucesso!', 'sucess');
       } catch (error) {
         console.error('Erro ao excluir área:', error);
         addNotification('Erro ao excluir a área. Tente novamente mais tarde.', 'error');
@@ -193,19 +202,69 @@ const ManagePointsAreas = () => {
     setSelectedPolygon(null); // Reseta o polígono selecionado
   };
 
+  const handleCancelEdit = () => {
+    setEditMode(true); // Sai do modo de edição
+    setShowForm(false); // Fecha o modal
+  };
+
   const toggleTable = () => {
     setShowTable(!showTable);
   };
 
   return (
     <div className="map-view-container">
+      {/* Exibindo as coordenadas em inputs flutuantes */}
+      {editMode && <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 80,
+          zIndex: 400,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          backgroundColor: 'rgba(255, 255, 255, 0.13)',
+          padding: '10px',
+          borderRadius: '8px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
+        }}
+      >
+        <label style={{ fontSize: '14px', fontWeight: 'bold' }}>
+          Coordenadas da área editada (selectedPolygon):
+        </label>
+        <textarea
+          value={JSON.stringify(selectedPolygon?.coordinates || [], null, 2)}
+          readOnly
+          rows={5}
+          style={{ resize: 'none', width: '300px', fontSize: '12px', fontFamily: 'monospace' }}
+        />
+        <label style={{ fontSize: '14px', fontWeight: 'bold' }}>
+          Coordenadas da área salva (originalCoordinates):
+        </label>
+        <textarea
+          value={originalCoordinates ? JSON.stringify(originalCoordinates, null, 2) : 'Nenhum dado original disponível.'}
+          readOnly
+          rows={5}
+          style={{ resize: 'none', width: '300px', fontSize: '12px', fontFamily: 'monospace' }}
+        />
+
+        <Button
+          variant="primary"
+          onClick={handleSaveArea}
+          label="Salvar Alterações"
+        >
+          <FaSave size={20} />
+
+        </Button>
+      </div>
+      }
       {/* Modal Formulário */}
       {showForm && (
         <div className="overlay">
           <div className="slide-modal">
             <div className="modal-header">
               <h3>{editMode ? 'Editar Área' : 'Criar Nova Área'}</h3>
-              <button className="close-btn" onClick={handleCancel} aria-label="Close">
+              <button className="close-btn" onClick={editMode ? handleCancelEdit : handleCancel} aria-label="Close">
                 <FaTimes size={20} />
               </button>
             </div>
@@ -232,7 +291,7 @@ const ManagePointsAreas = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <Button variant="secondary" onClick={handleCancel}>
+              <Button variant="secondary" onClick={editMode ? handleCancelEdit : handleCancel}>
                 Cancelar
               </Button>
               <Button variant="primary" onClick={handleSaveArea}>
@@ -258,8 +317,6 @@ const ManagePointsAreas = () => {
         editPolygonInMap={handleEdit}
         editMode={editMode}
       />
-
-
 
       {/* Botão de Exibição da Tabela */}
       <Button
@@ -304,7 +361,7 @@ const ManagePointsAreas = () => {
                     <tr key={index}>
                       <td>{polygon.mongoId ? `${polygon.mongoId.substring(0, 5)}...` : 'Sem Mongo ID'}</td>
                       <td>{polygon.name || 'Sem Nome'}</td>
-                      <td>{polygon.description || 'Sem Descrição'}</td>
+                      <td>{polygon.description + ' - ' + polygon.id || 'Sem Descrição'}</td>
                       <td className="table-options">
                         <button
                           title="Editar"
@@ -335,9 +392,29 @@ const ManagePointsAreas = () => {
             ) : (
               <p>Não há áreas cadastradas.</p>
             )}
+
           </div>
         </div>
       )}
+      {editMode && (
+        <Button
+          onClick={handleOpenEditForm}
+          style={{
+            position: 'absolute',
+            top: '5px',
+            right: '50px',
+            zIndex: 500,
+            backgroundColor: '#17a2b8',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            padding: '10px',
+          }}
+        >
+          <FaPen size={20} />
+        </Button>
+      )}
+
     </div>
   );
 };

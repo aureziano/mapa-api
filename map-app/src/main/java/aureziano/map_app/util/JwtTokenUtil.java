@@ -68,7 +68,7 @@ public class JwtTokenUtil {
         } catch (ExpiredJwtException e) {
             logger.warn("O token JWT expirou. Erro: {}", e.getMessage());
         } catch (Exception e) {
-            logger.error("Erro ao processar o token JWT: {}", e.getMessage());
+            logger.error("Erro ao processar o token JWT 2: {}", e.getMessage());
         }
         return false;
     }
@@ -76,17 +76,20 @@ public class JwtTokenUtil {
     // Método para obter os claims do token
     private Claims getClaimsFromToken(String token) {
         // logger.info("Decodificando token JWT: {}", token);
-        try {
-            Key key = getSigningKey(); // A chave de assinatura
-            return Jwts.parserBuilder()
-                    .setSigningKey(key) // Decodifica o token usando a chave correta
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            logger.error("Erro ao processar o token JWT: {}", e.getMessage());
+        if(!token.isEmpty())
+        {
+            try {
+                Key key = getSigningKey(); // A chave de assinatura
+                return Jwts.parserBuilder()
+                        .setSigningKey(key) // Decodifica o token usando a chave correta
+                        .build()
+                        .parseClaimsJws(token)
+                        .getBody();
+            } catch (Exception e) {
+                logger.error("Erro ao processar o token JWT 1: {}", e.getMessage());
+            }
         }
-        return null; // Retorna null se ocorrer um erro ao processar o token
+        return null; // Retorna null se ocorrer um erro ao processar o token 
     }
 
     // Método para obter o role do token
