@@ -145,7 +145,13 @@ public class AreaCoordinatesService {
 
     // Excluir coordenadas por ID
     public void deleteById(String id) {
-        coordinatesRepository.deleteById(id);
+        Optional<AreaCoordinates> areaCoordinatesOpt = coordinatesRepository.findById(id);
+        if (areaCoordinatesOpt.isPresent()) {
+            coordinatesRepository.deleteById(id);  // Exclui as coordenadas no MongoDB
+            logger.info("Coordenadas excluídas com sucesso para o mongoId: " + id);
+        } else {
+            throw new IllegalArgumentException("Coordenadas não encontradas para o mongoId: " + id);
+        }
     }
 
     // Buscar todas as coordenadas
@@ -158,31 +164,23 @@ public class AreaCoordinatesService {
         if (existingCoordinatesOpt.isPresent()) {
             AreaCoordinates existingCoordinates = existingCoordinatesOpt.get();
     
-            // Obter o valor atual das coordenadas
+            // Lógica de atualização
             GeoJsonPolygon currentPolygon = existingCoordinates.getCoordinates();
-            logger.info("Coordenadas atuais no MongoDB para ID : "+ id +" currentPolygon:"+ currentPolygon);
-    
-            // Converter o novo valor para GeoJsonPolygon
             GeoJsonPolygon newPolygon = convertStringToGeoJsonPolygon(newCoordinates);
-            logger.info("Novas coordenadas fornecidas: "+ newPolygon);
     
-            // Comparar valores
             if (currentPolygon != null && currentPolygon.equals(newPolygon)) {
                 logger.info("As coordenadas fornecidas são iguais às existentes. Nenhuma atualização será feita.");
-                return false; // Indica que nada foi atualizado
+                // return false;
             }
     
-            // Atualizar o valor no MongoDB
             existingCoordinates.setCoordinates(newPolygon);
             coordinatesRepository.save(existingCoordinates);
-            logger.info("Coordenadas atualizadas com sucesso no MongoDB para ID "+ id);
+            logger.info("Coordenadas atualizadas com sucesso no MongoDB para ID " + id);
             return true;
         }
     
-        logger.warning("Coordenadas não encontradas para ID "+ id);
-        return false; // ID não encontrado
+        logger.warning("Coordenadas não encontradas para ID " + id);
+        return false;
     }
-    
-    
     
 }

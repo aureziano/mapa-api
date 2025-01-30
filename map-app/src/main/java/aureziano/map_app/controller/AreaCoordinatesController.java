@@ -56,6 +56,21 @@ public class AreaCoordinatesController {
     }
 
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Map<String, String>> deleteCoordinates(@PathVariable String id) {
+        try {
+            // Chama o serviço para excluir as coordenadas no MongoDB
+            areaCoordinatesService.deleteById(id);  // Passa o mongoId para o serviço
+
+            // Retorna uma resposta de sucesso
+            return ResponseEntity.ok(Map.of("message", "Coordenadas excluídas com sucesso"));
+        } catch (Exception e) {
+            // Em caso de erro, retorna um erro
+            return ResponseEntity.status(500).body(Map.of("error", "Erro ao excluir as coordenadas"));
+        }
+    }
+
+
 
     
 
