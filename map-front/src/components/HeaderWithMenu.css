@@ -1,7 +1,7 @@
 /* HeaderWithMenu.css */
 .header {
-    background-color: #f4f4f4; /* Cor de fundo neutra */
-    padding: 10px 20px;
+    background-color: #aaafd6a6; /* Cor de fundo neutra */
+    padding: 5px 0px;
     position: fixed;
     top: 0;
     left: 0;
@@ -12,7 +12,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 60px; /* Altura do cabeçalho */
+    height: 40px; /* Altura do cabeçalho */
 }
 
 .header-content {
@@ -29,15 +29,15 @@
 .header-username {
     font-size: 16px;
     font-weight: 500;
-    color: #555;
+    color: #ffffff;
     white-space: nowrap;
-    margin-right: 10px;
+    margin-right: 0px;
 }
 
 .user-info {
-    margin-top: 3px; /* Espaçamento entre o botão e o texto */
+    margin-top: 0px; /* Espaçamento entre o botão e o texto */
     font-size: 14px; /* Tamanho da fonte ajustado */
-    color: #555;
+    color: #928585;
     line-height: 1.5; /* Espaçamento entre linhas */
 }
 
@@ -46,15 +46,26 @@
     flex-direction: column; /* Coloca os itens em uma coluna */
     align-items: flex-start; /* Alinha os itens ao início */
     position: absolute;
-    padding-right: 30px;
+    padding-right: 0px !important;
     /* left: 20px; 
     top: 10px;  */
 }
 
-/* display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-left: auto; */
+.left-section {
+    display: flex;
+    align-items: center;
+}
+
+.app-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #030000;
+    text-align: center;
+}
+
 .menu-button {
     background-color: #72b2f1e3;
     color: white;
@@ -64,6 +75,7 @@
     font-size: 14px;
     border-radius: 4px;
     transition: background-color 0.3s;
+    margin-left: -60px;
 }
 
 .menu-button:hover {
@@ -74,12 +86,13 @@
     background-color: #fff;
     border: 1px solid #ccc;
     position: absolute;
-    top: 50px; /* Altura do menu ajustada */
-    left: 20px;
+    top: 40px; /* Altura do menu ajustada */
+    left: 0px;
     padding: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
+    margin-left: -50px;
 }
 
 .menu-item {
@@ -97,7 +110,7 @@
 }
 
 .menu-item svg {
-    margin-right: 8px;
+    margin-right: 0px;
     font-size: 16px;
 }
 
@@ -118,6 +131,8 @@
     font-size: 14px;
     border-radius: 4px;
     transition: background-color 0.3s;
+    margin-top: 0px;
+    margin-right: -70px;
 }
 
 .logout-button:hover {
@@ -127,7 +142,8 @@
 .date {
     font-size: 12px;
     color: #777;
-    margin-top: 20px;
+    margin-top: 0px;
+    margin-right: -100px;
 }
 
 body {

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     MapContainer,
     TileLayer,
@@ -15,7 +15,6 @@ import 'leaflet-minimap/dist/Control.MiniMap.min.css';
 import 'leaflet-minimap';
 import 'leaflet-draw';
 import { EditControl } from 'react-leaflet-draw';
-import { useNotification } from './NotificationProvider';
 
 
 // Função para formatar os polígonos
@@ -85,14 +84,19 @@ const areCoordinatesDifferent = (coordinates1, coordinates2) => {
     return false;
 };
 
-const FocusOnSelectedPolygon = ({ selectedPolygon }) => {
+const FocusOnSelectedPolygon = ({ selectedPolygon, editing }) => {
     const map = useMap();
-
     useEffect(() => {
         if (selectedPolygon && selectedPolygon.centroid) {
-            map.setView(selectedPolygon.centroid, 12); // Centraliza e ajusta o zoom
+            if (editing) {
+                const currentZoom = map.getZoom(); // Obtém o zoom atual do mapa
+                map.setView(selectedPolygon.centroid, currentZoom); // Mantém o zoom atual
+            }
+            else
+                map.setView(selectedPolygon.centroid, 12);
         }
-    }, [selectedPolygon, map]);
+
+    }, [selectedPolygon, map, editing]);
 
     return null;
 };
@@ -108,8 +112,7 @@ const MiniMapControl = () => {
                     new L.TileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png"),
                     {
                         position: 'bottomright',
-                        width: 200,
-                        height: 200,
+                        
                     }
                 );
                 miniMap.addTo(map);
@@ -129,31 +132,29 @@ const GenericMapView = ({
     regionPolygons,
     enableDrawControl,
     selectedPolygon,
-    setPolygons,
-    polygons,
     setSelectedPolygon,
+    setPolygons,
+    handleStopEdit,
     currentPolygon,
     setCurrentPolygon,
     setEditedPolygon,
-    isMapReady,
+    stopEditingPolygon,
     setIsMapReady,
     featureGroupRef,
     editMode,
-    setEditMode
+    setEditMode,
+    editing
 }) => {
     // Ref callback para garantir a inicialização correta
-    const { addNotification } = useNotification();
     const [editableLayer, setEditableLayer] = useState(null);
-
     useEffect(() => {
-        // Ativar edição no polígono selecionado
         if (editMode && selectedPolygon && featureGroupRef.current) {
-            // Remove qualquer camada de edição anterior
+            // Remove any previous editable layer
             if (editableLayer) {
                 featureGroupRef.current.removeLayer(editableLayer);
             }
 
-            // Criar um novo layer para o polígono selecionado
+            // Create a new layer for the selected polygon
             const layer = L.polygon(selectedPolygon.coordinates, {
                 color: 'red',
                 weight: 3,
@@ -163,114 +164,81 @@ const GenericMapView = ({
             featureGroupRef.current.addLayer(layer);
             setEditableLayer(layer);
 
-            // Ativar edição no layer criado
+            // Enable editing on the created layer
             layer.editing.enable();
 
-            // Adicionar listener para capturar alterações no polígono
+            // Add listener to capture changes
             layer.on('edit', () => {
                 const updatedCoordinates = layer.getLatLngs().map((ring) =>
                     ring.map((latlng) => [latlng.lat, latlng.lng])
                 );
 
-                // Atualizar o estado com as novas coordenadas
                 const updatedPolygon = {
                     ...selectedPolygon,
                     coordinates: updatedCoordinates,
                 };
 
-                setSelectedPolygon(updatedPolygon); // Atualiza o polígono selecionado
-                setEditedPolygon(updatedPolygon); // Mantém o estado de edição sincronizado
+                setSelectedPolygon(updatedPolygon); // Update the selected polygon
+                setEditedPolygon(updatedPolygon); // Sync the edited state
             });
 
+            // Cleanup on unmount or when polygon changes
             return () => {
-                // Limpar o listener ao desmontar ou quando o polígono mudar
                 layer.off('edit');
+                featureGroupRef.current.removeLayer(layer); // Remove the layer from the map
             };
         }
-    }, [editMode, selectedPolygon]);
+
+        if (!editMode && editableLayer) {
+            handleStopEdit(); // Stop editing if editMode is false
+        }
+    }, [editMode, selectedPolygon?.id, editableLayer?.id, featureGroupRef, setEditedPolygon, setSelectedPolygon?.id]);
 
     const renderPolygons = (polygons = [], layerName, selectedPolygon = null) => {
         const safePolygons = Array.isArray(polygons) ? polygons : [polygons];
 
         return (
-            <LayerGroup key={layerName}>
+            <LayerGroup key={`${layerName}-${safePolygons.length}`}>
                 {selectedPolygon && (
                     <Polygon
-                        key="selectedPolygon"
+                        key={`selected-${layerName}-${selectedPolygon?.mongoId || Math.random()}`}
                         positions={selectedPolygon.coordinates}
-                        color="red"
-                        fillColor="rgba(255, 0, 0, 0.3)"
-                        weight={3}
+                        pathOptions={{
+                            color: "red",
+                            fillColor: "rgba(255, 0, 0, 0.3)",
+                            weight: 3
+                        }}
                     />
                 )}
-                {safePolygons.map((polygon, idx) => (
-                    <Polygon
-                        key={`${layerName}-${idx}`}
-                        positions={polygon.coordinates}
-                        color={polygon.color || 'blue'}
-                        fillColor={polygon.fillColor || 'rgba(0, 0, 255, 0.3)'}
-                        onClick={() => handlePolygonClick(polygon.mongoId)}
-                    />
-                ))}
+                {safePolygons.map((polygon) => {
+                    const uniqueKey = `polygon-${polygon.mongoId || polygon.id}-${polygon.coordinates[0][0]}`;
+                    return (
+                        <Polygon
+                            key={uniqueKey}
+                            positions={polygon.coordinates}
+                            pathOptions={{
+                                color: polygon.color || 'blue',
+                                fillColor: polygon.fillColor || 'rgba(0, 0, 255, 0.3)'
+                            }}
+                            eventHandlers={{
+                                click: (e) => {
+                                    const layer = e.target;
+                                    const popupContent = `
+                        <div>
+                          <h4>${polygon.name || 'Sem Nome'}</h4>
+                          <p>${polygon.description || 'Sem Descrição'}</p>
+                          <p>Camada: ${layerName}</p>
+                          <p>ID: ${polygon.mongoId || 'Sem ID'}</p>
+                        </div>
+                      `;
+                                    layer.bindPopup(popupContent).openPopup();
+                                }
+                            }}
+                        />
+                    );
+                })}
             </LayerGroup>
         );
-    };
-
-    const handleEditPolygon = (event) => {
-        const layers = event.layers.getLayers();
-        const updatedPolygons = layers.map((layer) => {
-            const coordinates = layer.getLatLngs().map((ring) =>
-                ring.map((latlng) => [latlng.lat, latlng.lng])
-            );
-
-            return {
-                coordinates,
-                mongoId: selectedPolygon?.mongoId,
-                name: selectedPolygon?.name,
-                description: selectedPolygon?.description,
-            };
-        });
-
-        // Atualizar selectedPolygon com as novas coordenadas
-        setSelectedPolygon({
-            ...selectedPolygon,
-            coordinates: updatedPolygons[0].coordinates,
-        });
-
-        // Atualizar currentPolygon com as novas coordenadas
-        setCurrentPolygon({
-            ...currentPolygon,
-            coordinates: updatedPolygons[0].coordinates,
-        });
-
-        console.log('Polígono editado', updatedPolygons[0]);
-    };
-
-    const handlePolygonClick = (mongoId) => {
-        const polygon = regionPolygons.find((p) => p.mongoId === mongoId);
-
-        if (polygon) {
-            setSelectedPolygon(polygon);
-            setEditMode(true);
-            addNotification('Editando o polígono selecionado!', 'info');
-        } else {
-            console.error('Polígono não encontrado:', mongoId);
-        }
-    };
-
-    const handleCreatedPolygon = (event) => {
-        console.log("veio aqui!!!!")
-        const { layer } = event;
-
-        if (featureGroupRef.current) {
-            const coordinates = layer.getLatLngs().map((ring) =>
-                ring.map((latlng) => [latlng.lat, latlng.lng])
-            );
-            onPolygonCreated({ coordinates });
-            featureGroupRef.current.addLayer(layer);
-        } else {
-            console.error('FeatureGroupRef não está inicializado.');
-        }
     };
 
 
@@ -311,13 +279,12 @@ const GenericMapView = ({
                 {enableDrawControl && (
                     <FeatureGroup
                         ref={featureGroupRef}
-                        onEdited={(event) => handleEditPolygon(event)}
+                    // onEdited={(event) => handleEditPolygon(event)}
                     >
                         {/* {console.log('FeatureGroup ref:', featureGroupRef.current)} Verifica a referência */}
                         <EditControl
                             position="topright"
-                            onCreated={handleCreatedPolygon}
-                            onEdited={handleEditPolygon}
+                            onCreated={onPolygonCreated}
                             draw={{
                                 polygon: true,
                                 polyline: false,
@@ -327,7 +294,9 @@ const GenericMapView = ({
                                 circlemarker: false,
                             }}
                             edit={{
-                                featureGroup: featureGroupRef.current, // Camadas disponíveis para edição
+                                featureGroup: featureGroupRef.current,
+                                edit: false, // Permite edição
+                                remove: false, // Permite remoção
                             }}
                         />
                     </FeatureGroup>
@@ -337,7 +306,7 @@ const GenericMapView = ({
 
                 {enableMiniMap && <MiniMapControl />}
 
-                <FocusOnSelectedPolygon selectedPolygon={selectedPolygon} />
+                <FocusOnSelectedPolygon selectedPolygon={selectedPolygon} editing={editing} />
             </LayersControl>
         </MapContainer>
     );

@@ -9,15 +9,13 @@ const MapView = () => {
     const [regionPolygons, setRegionPolygons] = useState([]);
     const [isMapReady, setIsMapReady] = useState(false);
     
-    // Inicialize o featureGroupRef com useRef
     const featureGroupRef = useRef(null);
 
-    // Busca dados para os polígonos de estado
     useEffect(() => {
         const fetchStatePolygons = async () => {
             try {
                 const response = await api.get('/api/mongoData/polygonsEstado');
-                const formattedPolygons = formatPolygons(response.data);  // Chama a função formatPolygons importada
+                const formattedPolygons = formatPolygons(response.data);
                 setStatePolygons(formattedPolygons);
             } catch (error) {
                 console.error('Erro ao carregar os polígonos de estado:', error);
@@ -27,12 +25,11 @@ const MapView = () => {
         fetchStatePolygons();
     }, []);
 
-    // Busca dados para os polígonos de região
     useEffect(() => {
         const fetchRegionPolygons = async () => {
             try {
                 const response = await api.get('/api/mongoData/polygons');
-                const formattedPolygons = formatPolygons(response.data);  // Chama a função formatPolygons importada
+                const formattedPolygons = formatPolygons(response.data);
                 setRegionPolygons(formattedPolygons);
             } catch (error) {
                 console.error('Erro ao carregar os polígonos de região:', error);
@@ -44,7 +41,7 @@ const MapView = () => {
 
     return (
         <div className="map-view-container">
-            <h1 className="map-view-title">Visualização de Mapas</h1>
+            
             <GenericMapView
                 statePolygons={statePolygons}
                 regionPolygons={regionPolygons}

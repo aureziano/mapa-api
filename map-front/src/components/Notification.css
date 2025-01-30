@@ -1,4 +1,34 @@
-/* notification.css */
+/* Container do overlay de loading */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5); /* Fundo escuro semi-transparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000; /* Garante que fique acima de outros elementos */
+}
+
+/* Estilo moderno para o spinner */
+.spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid transparent;
+    border-top: 6px solid #ffffff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+/* Animação do spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Estilização das notificações */
 .notification-container {
     position: fixed;
     top: 20px;
@@ -25,20 +55,20 @@
 
 /* Estilo para notificações de sucesso (azul) */
 .notification.sucess {
-    background-color: #102841d0 !important;  /* Azul */
+    background-color: #102841d0 !important;
 }
 
 /* Estilo para notificações de aviso (amarelo) */
 .notification.warn {
-    background-color: #ffc107;  /* Amarelo */
+    background-color: #ffc107;
 }
 
 /* Estilo para notificações de informacao (verde) */
 .notification.info {
-    background-color: #1e5a32b2;  /* verde */
+    background-color: #1e5a32b2;
 }
 
 /* Estilo para notificações de erro (vermelho) */
 .notification.error {
-    background-color: #dc3545;  /* Vermelho */
+    background-color: #dc3545;
 }
