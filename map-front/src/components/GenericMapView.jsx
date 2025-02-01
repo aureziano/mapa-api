@@ -11,7 +11,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
-import 'leaflet-minimap/dist/Control.MiniMap.min.css';
+import './Control.MiniMap.css';
 import 'leaflet-minimap';
 import 'leaflet-draw';
 import { EditControl } from 'react-leaflet-draw';
@@ -112,7 +112,10 @@ const MiniMapControl = () => {
                     new L.TileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png"),
                     {
                         position: 'bottomright',
-                        
+                        width: 150,  // Reduzido para um tamanho mais razoável
+                        height: 150, // Definido explicitamente para garantir a altura
+                        toggleDisplay: true,
+                        minimized: false
                     }
                 );
                 miniMap.addTo(map);
@@ -124,6 +127,7 @@ const MiniMapControl = () => {
     return null;
 };
 
+
 // Componente principal
 const GenericMapView = ({
     statePolygons,
@@ -133,20 +137,16 @@ const GenericMapView = ({
     enableDrawControl,
     selectedPolygon,
     setSelectedPolygon,
-    setPolygons,
     handleStopEdit,
-    currentPolygon,
-    setCurrentPolygon,
     setEditedPolygon,
-    stopEditingPolygon,
     setIsMapReady,
     featureGroupRef,
     editMode,
-    setEditMode,
     editing
 }) => {
     // Ref callback para garantir a inicialização correta
     const [editableLayer, setEditableLayer] = useState(null);
+    L.Util.warnOnce = function() {};
     useEffect(() => {
         if (editMode && selectedPolygon && featureGroupRef.current) {
             // Remove any previous editable layer

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Route, Routes, useNavigate, useLocation } from 'react-router-dom';
 import LoginForm from './components/LoginForm';
 import RegisterForm from './components/RegisterForm';
@@ -23,21 +23,35 @@ const App = () => {
     const location = useLocation();
     const [currentPage, setCurrentPage] = useState('');
 
-    // Mapeamento de rotas para títulos
-    const pageTitles = {
+    // Mapeamento memoizado das rotas para títulos
+    const pageTitles = useMemo(() => ({
         '/dashboard': 'Dashboard',
         '/map-view': 'Visualização de Mapa',
         '/manage': 'Gerenciamento de Áreas',
         '/userspage': 'Página de Usuários',
         '/users': 'Gestão de Usuários'
-    };
+    }), []);
 
     // Atualiza o título da página quando a rota muda
     useEffect(() => {
         setCurrentPage(pageTitles[location.pathname] || '');
-    }, [location.pathname]);
+    }, [location.pathname, pageTitles]);
 
-    // Efeito para verificação de autenticação
+    // Função para logout
+    const handleLogout = useCallback(() => {
+        addNotification("Logout realizado.", "success");
+        setUser({
+            isLoggedIn: false,
+            email: '',
+            role: [],
+            cpf: '',
+            firstName: '',
+        });
+        localStorage.removeItem('authToken');
+        navigate('/');
+    }, [addNotification, setUser, navigate]);
+
+    // Efeito para verificação do token
     useEffect(() => {
         const token = localStorage.getItem('authToken');
 
@@ -50,7 +64,7 @@ const App = () => {
             try {
                 const decodedToken = jwtDecode(token);
                 const currentTime = Date.now() / 1000;
-                
+
                 if (decodedToken.exp < currentTime) {
                     handleLogout();
                     return;
@@ -71,7 +85,7 @@ const App = () => {
 
         verifyToken();
         setupInterceptors(setUser, navigate);
-    }, [navigate, setUser]);
+    }, [navigate, setUser, handleLogout]);
 
     const handleLoginSuccess = () => {
         const token = localStorage.getItem('authToken');
@@ -92,19 +106,6 @@ const App = () => {
         }
     };
 
-    const handleLogout = () => {
-        addNotification("Logout realizado.", "success");
-        setUser({
-            isLoggedIn: false,
-            email: '',
-            role: [],
-            cpf: '',
-            firstName: '',
-        });
-        localStorage.removeItem('authToken');
-        navigate('/');
-    };
-
     return (
         <div>
             {user.isLoggedIn && (
@@ -123,15 +124,15 @@ const App = () => {
                 <Route path="/register" element={<RegisterForm />} />
                 
                 <Route path="/dashboard" element={
-                    <AdminRoute>
+                    // <AdminRoute>
                         <Dashboard />
-                    </AdminRoute>
+                    // </AdminRoute>
                 } />
                 
                 <Route path="/map-view" element={
-                    <AdminRoute>
+                    // <AdminRoute>
                         <MapView />
-                    </AdminRoute>
+                    // </AdminRoute>
                 } />
                 
                 <Route path="/manage" element={

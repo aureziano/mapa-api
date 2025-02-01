@@ -10,8 +10,8 @@ import lombok.Setter;
 import org.hibernate.validator.constraints.br.CPF;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import aureziano.map_app.entity.Role;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 
@@ -35,6 +35,7 @@ public class UserDto {
     @NotEmpty(message = "Roles should not be empty")
     private List<String> roles;   
     @NotEmpty(message = "Password should not be empty")
-    @JsonIgnore
+    // @JsonIgnore
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 }

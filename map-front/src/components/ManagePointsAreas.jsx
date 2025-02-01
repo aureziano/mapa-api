@@ -6,8 +6,6 @@ import { useNotification } from './NotificationProvider';
 import GenericMapView, { formatPolygons, getValidatedCentroid } from './GenericMapView';
 import L from 'leaflet';
 import './ManagePointsAreas.css';
-import { useMap } from 'react-leaflet';
-// import { useMap } from 'react-leaflet';
 
 const ManagePointsAreas = () => {
   const [polygons, setPolygons] = useState([]);
@@ -21,12 +19,12 @@ const ManagePointsAreas = () => {
   const [editing, setEditing] = useState(false);
   const { addNotification, setLoading } = useNotification();
   const [selectedPolygon, setSelectedPolygon] = useState(null);
-  const [isMapReady, setIsMapReady] = useState(false);
+  const [IsMapReady, setIsMapReady] = useState(false);
   const [areaInCreation] = useState(false);
   const [originalCoordinates, setOriginalCoordinates] = useState(null);
   const [tableData, setTableData] = useState([]);
-  const [mapKey, setMapKey] = useState(0); // Adicione este estado no componente pai
-  const [currentZoom, setCurrentZoom] = useState(7); // Valor inicial
+  const [idArea, setIdArea] = useState('');
+  const [ setMapKey] = useState(0); // Adicione este estado no componente pai
 
   const featureGroupRef = useRef(null);
 
@@ -53,7 +51,7 @@ const ManagePointsAreas = () => {
     };
 
     fetchStatePolygons();
-  }, []);
+  }, [setLoading]);
 
 
   // Busca dados para os polígonos preenchidos
@@ -62,7 +60,6 @@ const ManagePointsAreas = () => {
       try {
         setLoading(true); // Set loading state
         const response = await api.get('/api/mongoData/polygons');
-        // console.log("Polígonos recebidos da API:", response.data);
         const formattedPolygons = formatPolygons(response.data || []).map((polygon) => ({
           ...polygon,
           mongoId: polygon.mongoId
@@ -87,7 +84,7 @@ const ManagePointsAreas = () => {
     };
 
     fetchRegionPolygons();
-  }, []);
+  }, [setLoading]);
 
   const handlePolygonEdit = (selectedPolygon, currentPolygon) => {
     if (selectedPolygon && JSON.stringify(selectedPolygon) !== JSON.stringify(currentPolygon)) {
@@ -110,6 +107,7 @@ const ManagePointsAreas = () => {
       setOriginalCoordinates([]);  // Limpa as coordenadas originais
       setName('');               // Limpa o nome
       setDescription('');        // Limpa a descrição
+      setIdArea('');
       setEditMode(false);        // Desativa o modo de edição
       setShowForm(false);        // Fecha o formulário de edição
 
@@ -121,7 +119,6 @@ const ManagePointsAreas = () => {
   // No método de criação do polígono dentro de GenericMapView:
   const handlePolygonCreated = (polygonData) => {
     const coordinates = polygonData.layer._latlngs[0].map(coord => [coord.lat, coord.lng]);
-
     const newPolygon = {
       coordinates: coordinates,
       color: 'blue',
@@ -129,7 +126,6 @@ const ManagePointsAreas = () => {
       mongoId: polygonData.layer._leaflet_id,
     };
 
-    console.log("_leaflet_id", polygonData.layer._leaflet_id);
     const layer = L.polygon(newPolygon.coordinates, {
       color: newPolygon.color,
       fillColor: newPolygon.fillColor,
@@ -139,6 +135,9 @@ const ManagePointsAreas = () => {
     featureGroupRef.current.addLayer(layer);
     setPolygons((prevPolygons) => [...prevPolygons, newPolygon]);
     setCurrentPolygon(newPolygon);
+    setName('');
+    setDescription('');
+    setIdArea('');
     setShowForm(true);
     setEditMode(false);
   };
@@ -253,6 +252,7 @@ const ManagePointsAreas = () => {
     setOriginalCoordinates([...polygon.coordinates]);
     setName(polygon.name || '');
     setDescription(polygon.description || '');
+    setIdArea(polygon.id || '');
     setEditMode(true);
     setShowForm(true);
 
@@ -332,11 +332,10 @@ const ManagePointsAreas = () => {
     }
   };
 
-
   const handleCancel = () => {
-    // console.log("Cancelando e fechando modal...");
     setName("");
     setDescription("");
+    setIdArea("");
     setShowForm(false); // Fecha o modal
     setEditing(false);
     setEditMode(false);
@@ -437,6 +436,26 @@ const ManagePointsAreas = () => {
         </Button>
       </div>
       }
+
+      {editMode && (
+        <Button
+          onClick={handleOpenEditForm}
+          style={{
+            position: 'absolute',
+            top: '120px',
+            right: '10px',
+            zIndex: 500,
+            backgroundColor: '#17a2b8',
+            color: 'white',
+            border: 'none',
+            borderRadius: '50%',
+            padding: '10px',
+          }}
+        >
+          <FaPen size={20} />
+        </Button>
+      )}
+
       {/* Modal Formulário */}
       {showForm && (
         <div className="overlay">
@@ -448,6 +467,7 @@ const ManagePointsAreas = () => {
               </button>
             </div>
             <div className="modal-body">
+            <span className="form-id" >{idArea ? ('Id: ' + idArea) : ''}</span>
               <div className="form-group">
                 <label htmlFor="name">Nome da Área</label>
                 <input
@@ -485,17 +505,15 @@ const ManagePointsAreas = () => {
       <GenericMapView
         statePolygons={statePolygons || []}
         regionPolygons={polygons || []}
-        selectedPolygon={selectedPolygon} // Passa o selectedPolygon como prop
-        setSelectedPolygon={setSelectedPolygon} // Passa o setSelectedPolygon como prop
-        setEditedPolygon={handlePolygonEdit}
         onPolygonCreated={handlePolygonCreated}
-        enableDrawControl={!areaInCreation}
-        handleStopEdit={handleStopEdit}
         enableMiniMap={true}
-        isMapReady={isMapReady}
+        enableDrawControl={!areaInCreation}
+        selectedPolygon={selectedPolygon}
+        setSelectedPolygon={setSelectedPolygon}
+        handleStopEdit={handleStopEdit}
+        setEditedPolygon={handlePolygonEdit}
         setIsMapReady={setIsMapReady}
-        featureGroupRef={featureGroupRef}  // Passa o ref para o GenericMapView
-        editPolygonInMap={handleEdit}
+        featureGroupRef={featureGroupRef} 
         editMode={editMode}
         editing={editing}
       />
@@ -578,25 +596,7 @@ const ManagePointsAreas = () => {
           </div>
         </div>
       )}
-      {editMode && (
-        <Button
-          onClick={handleOpenEditForm}
-          style={{
-            position: 'absolute',
-            top: '5px',
-            right: '50px',
-            zIndex: 500,
-            backgroundColor: '#17a2b8',
-            color: 'white',
-            border: 'none',
-            borderRadius: '50%',
-            padding: '10px',
-          }}
-        >
-          <FaPen size={20} />
-        </Button>
-      )}
-
+      
     </div>
   );
 };

@@ -1,10 +1,10 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import jwtDecode from 'jwt-decode';
 
-// Cria o contexto do usuário
 const UserContext = createContext();
 
-export const useUser = () => useContext(UserContext); // Hook para acessar o contexto
+export const useUser = () => useContext(UserContext);
 
 export const UserProvider = ({ children }) => {
     const [user, setUser] = useState({
@@ -17,31 +17,39 @@ export const UserProvider = ({ children }) => {
 
     const navigate = useNavigate();
 
-    useEffect(() => {
+    const verifyToken = useCallback(() => {
         const token = localStorage.getItem('authToken');
-        const storedUser = JSON.parse(localStorage.getItem('user'));
-
-        if (token && storedUser) {
-            setUser({ ...storedUser, isLoggedIn: true });
-        } else {
-            setUser({
-                isLoggedIn: false,
-                role: [],
-                email: '',
-                cpf: '',
-                firstName: '',
-            });
+        if (token) {
+            try {
+                const decodedToken = jwtDecode(token);
+                const currentTime = Date.now() / 1000;
+                
+                if (decodedToken.exp > currentTime) {
+                    const storedUser = JSON.parse(localStorage.getItem('user'));
+                    setUser({ ...storedUser, isLoggedIn: true });
+                    return true;
+                }
+            } catch (error) {
+                console.error('Erro ao decodificar o token:', error);
+            }
         }
+        return false;
     }, []);
 
-    const login = (userData, token) => {
+    useEffect(() => {
+        if (!verifyToken()) {
+            logout();
+        }
+    }, [verifyToken]);
+
+    const login = useCallback((userData, token) => {
         localStorage.setItem('authToken', token);
         localStorage.setItem('user', JSON.stringify(userData));
         setUser({ ...userData, isLoggedIn: true });
-        navigate('/users'); // Redireciona após login
-    };
+        navigate('/dashboard');
+    }, [navigate]);
 
-    const logout = () => {
+    const logout = useCallback(() => {
         localStorage.removeItem('authToken');
         localStorage.removeItem('user');
         setUser({
@@ -51,11 +59,11 @@ export const UserProvider = ({ children }) => {
             cpf: '',
             firstName: '',
         });
-        navigate('/login'); // Redireciona após logout
-    };
+        navigate('/');
+    }, [navigate]);
 
     return (
-        <UserContext.Provider value={{ user, setUser, login, logout }}>
+        <UserContext.Provider value={{ user, setUser, login, logout, verifyToken }}>
             {children}
         </UserContext.Provider>
     );

@@ -38,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = null;
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            logger.info("authorizationHeader : {}", authorizationHeader);
+            // logger.info("authorizationHeader : {}", authorizationHeader);
             token = authorizationHeader.substring(7); // Remove "Bearer "
         }
         // logger.info("token inicial : {}", token);
@@ -49,7 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (cpf != null && jwtTokenUtil.validateToken(token)) {
                     // Aqui você pode validar se o usuário tem a role necessária
-                    logger.info("Token válido para usuário: {}  {}", cpf, roles);
+                    // logger.info("Token válido para usuário: {}  {}", cpf, roles);
                     
                     // Verifica se o usuário tem a role 'ADMIN', caso contrário, lança uma exceção
                     if (!roles.contains("ROLE_ADMIN")) {
@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    logger.info("authToken: {}", authToken.getAuthorities().toString());
+                    // logger.info("authToken: {}", authToken.getAuthorities().toString());
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                     // logger.info("Autenticação realizada com sucesso para usuário: {}", cpf);
                 } else {

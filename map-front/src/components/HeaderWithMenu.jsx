@@ -69,7 +69,7 @@ const HeaderWithMenu = ({ username, role, cpf, firstName, onLogout, currentPage 
                     </div>
                     <div className="user-info">
                         <span className="header-username">Olá, {firstName}, </span>
-                        <span className="header-role">Perfil: {role.join(', ')}, </span>
+                        <span className="header-role">Perfil: {Array.isArray(role) ? role.join(', ') : ''}, </span>
                         <span className="header-cpf">CPF: {cpf}</span>
                     </div>
                 </div>

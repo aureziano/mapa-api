@@ -67,7 +67,7 @@
 }
 
 .menu-button {
-    background-color: #72b2f1e3;
+    background-color: #022c57e3;
     color: white;
     border: none;
     padding: 8px 16px;
@@ -110,7 +110,7 @@
 }
 
 .menu-item svg {
-    margin-right: 0px;
+    margin-right: 10px;
     font-size: 16px;
 }
 

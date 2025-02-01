@@ -2,11 +2,6 @@
 body {
     font-family: 'Roboto', sans-serif;
     margin: 0;
-    padding: 51px 0 0 0 !important;
-    background: linear-gradient(135deg, #f5af19, #0905e6);
-    color: #333;
-    overflow-x: hidden;
-    overflow-y: hidden;
 }
 
 /* Classe que esconde elementos */
@@ -24,11 +19,14 @@ body {
 .map-view-container {
     width: 100vw;
     height: 90vh;
-    margin: 0;
+    margin: 40px 0 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    /* overflow: hidden; */
+    border: #ffffff;
+    border-width: 1%;
+    border-radius: 1%;
+    overflow: hidden;
     position: relative;
     z-index: 0;
 }
@@ -57,7 +55,7 @@ body {
 /* Estilo para a sobreposição */
 .overlay {
     position: fixed;
-    top: 90px;
+    top: 50px;
     left: 0;
     width: 100%;
     height: 100%;
@@ -65,14 +63,15 @@ body {
     z-index: 1000;
     display: flex;
     justify-content: flex-end;
-    align-items: stretch;;
+    align-items: stretch;
 }
 
 /* Modal Deslizante */
 .slide-modal {
     background-color: rgba(9, 50, 153, 0.308) !important;
     width: 30% !important;
-    max-height: 80vh;
+    max-height: 89vh;
+    top: 50px;
     height: auto;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
     animation: slide-in-right 0.3s ease-out;
@@ -80,17 +79,13 @@ body {
     flex-direction: column;
     color: #fff;
     position: relative;
-    padding: 90px 40px 10px 10px !important;
+    padding: 10px 40px 10px 10px !important;
 }
 
 /* Animação do Modal */
 @keyframes slide-in-right {
-    from {
-        transform: translateX(100%);
-    }
-    to {
-        transform: translateX(0);
-    }
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
 }
 
 /* Cabeçalho do Modal */
@@ -100,16 +95,9 @@ body {
     align-items: center;
     border-bottom: 1px solid #ddd;
     padding-bottom: 10px;
-    /* margin-bottom: 10px; */
 }
 
-.modal-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #fff !important;
-}
-
-.modal-header h3 {
+.modal-header h2, .modal-header h3 {
     margin: 0;
     font-size: 1.5rem;
     color: #fff !important;
@@ -135,7 +123,13 @@ body {
     display: flex;
     flex-direction: column;
     margin-bottom: 15px;
-    
+}
+
+.modal-body .form-id {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    color: #b71c1c;
 }
 
 .modal-body label {
@@ -191,19 +185,19 @@ body {
 }
 
 .modal-footer .btn-primary {
-    background: #f12711;
+    background: rgb(54 156 203);
     color: #fff;
     transition: all 0.2s ease;
 }
 
 .modal-footer .btn-primary:hover {
-    background: #b71c1c;
+    background: rgb(54 156 203);
 }
 
 /* Estilos da Tabela */
 .table-modal {
     position: fixed;
-    top: 30px;
+    top: 50px;
     left: 0;
     width: 40%;
     height: 100%;
@@ -212,7 +206,7 @@ body {
     z-index: 1001;
     display: flex;
     flex-direction: column;
-    padding: 60px 10px 40px 20px;
+    padding: 10px 10px 40px 20px;
     overflow-y: auto;
     transition: transform 0.3s ease-in-out;
 }
@@ -223,13 +217,17 @@ body {
     border-collapse: collapse;
     margin-top: 0px;
     font-size: 0.95rem;
+    table-layout: fixed;
 }
 
 .table th,
 .table td {
     padding: 12px 15px;
     border: 1px solid #ddd;
-    text-align: left;
+    /* text-align: left; */
+    color: #000;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .table th {
@@ -248,26 +246,52 @@ body {
 
 .table tbody tr:hover {
     background-color: #f12711;
-    color: #fff;
+    color: #000;
     transition: background-color 0.2s ease-in-out;
     cursor: pointer;
 }
 
+/* Define larguras proporcionais para as colunas */
+.table th:nth-child(1),
+.table td:nth-child(1) {
+    width: 20%;
+}
+
+.table th:nth-child(2),
+.table td:nth-child(2) {
+    width: 20%;
+}
+
+.table th:nth-child(3),
+.table td:nth-child(3) {
+    width: 40%;
+}
+
+.table th:nth-child(4),
+.table td:nth-child(4) {
+    width: 20%;
+    padding: 0; /* Remove o padding para evitar espaços desnecessários */
+}
+
 /* Opções com Ícones */
 .table-options {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
+    display: table-cell; /* Muda para table-cell em vez de flex */
+    vertical-align: middle; /* Centraliza verticalmente o conteúdo */
+    text-align: center; /* Centraliza horizontalmente o conteúdo */
+    height: 100%;
+    width: 100%;
 }
 
 .icon-btn {
+    display: inline-block; /* Muda para inline-block */
     background: none;
     border: none;
     color: #2c3e50;
     cursor: pointer;
-    padding: 5px;
+    padding: 1px;
     border-radius: 5px;
     transition: all 0.3s ease;
+    margin-left: 10px;
 }
 
 .icon-btn:hover {
@@ -280,7 +304,6 @@ body {
     .slide-modal,
     .table-modal {
         width: 100%;
-        /* padding: 20px; */
     }
 
     .toggle-table-btn {

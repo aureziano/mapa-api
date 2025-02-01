@@ -13,22 +13,22 @@ const LoginForm = ({ onLoginSuccess }) => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await api.post('/api/auth/login', { username, password });
+            const response = await api.post('/api/auth/login', { 
+                username: cleanCPF(username), 
+                password 
+            });
 
             if (response.data && response.data.token) {
                 const { token } = response.data;
-                localStorage.setItem('authToken', token); // Armazena o token no localStorage
-                setAuthToken(token); // Define o token para futuras requisições, se necessário
+                localStorage.setItem('authToken', token);
+                setAuthToken(token);
 
-                // console.log('Token armazenado no localStorage:', token);
                 if (typeof onLoginSuccess === 'function') {
-                    onLoginSuccess(); // Verifica se a função foi passada como prop antes de chamá-la
+                    onLoginSuccess();
                 }
                 addNotification("Login bem-sucedido!", "success");
-                // alert('Login bem-sucedido!');
             } else {
                 addNotification("Não foi possível obter o token.", "Erro");
-                // alert('Erro: Não foi possível obter o token.');
             }
         } catch (error) {
             if (error.response) {
@@ -48,6 +48,21 @@ const LoginForm = ({ onLoginSuccess }) => {
         navigate('/register');
     };
 
+    const formatCPF = (value) => {
+        const cleaned = value.replace(/\D/g, '');
+        const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,3})(\d{0,2})$/);
+        if (match) {
+          return !match[2] ? match[1] 
+               : !match[3] ? `${match[1]}.${match[2]}`
+               : !match[4] ? `${match[1]}.${match[2]}.${match[3]}`
+               : `${match[1]}.${match[2]}.${match[3]}-${match[4]}`;
+        }
+        return cleaned;
+      };
+      
+      const cleanCPF = (cpf) => cpf.replace(/\D/g, '');
+      
+
     return (
         <div className="login-container">
             <div className="login-box">
@@ -56,9 +71,10 @@ const LoginForm = ({ onLoginSuccess }) => {
                     <input
                         className="login-input"
                         type="text"
-                        placeholder="Usuário"
+                        placeholder="CPF"
                         value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        onChange={(e) => setUsername(formatCPF(e.target.value))}
+                        maxLength={14}
                         required
                     />
                     <input
