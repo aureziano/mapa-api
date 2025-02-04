@@ -1,5 +1,6 @@
 package aureziano.map_app.dto;
 
+import java.time.Instant;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -33,9 +34,14 @@ public class UserDto {
     @CPF
     private String cpf;
     @NotEmpty(message = "Roles should not be empty")
-    private List<String> roles;   
+    private List<String> roles;
     @NotEmpty(message = "Password should not be empty")
-    // @JsonIgnore
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+    @NotEmpty
+    private Instant tokenExpiration;
+
+    // Campos opcionais para IP e informações do dispositivo
+    private String ipAddress;
+    private String deviceInfo;
 }

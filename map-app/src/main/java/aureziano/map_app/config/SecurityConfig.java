@@ -43,21 +43,25 @@ public class SecurityConfig {
         JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtTokenUtil, userDetailsService);
 
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry
-                        -> authorizationManagerRequestMatcherRegistry
-                        .requestMatchers(HttpMethod.DELETE).hasRole("ADMIN")
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll() // Registro e login sem autenticação
-                        .requestMatchers("/api/register/*").permitAll() // Registro de usuário sem autenticação
-                        .requestMatchers("/admin/**").hasRole("ADMIN") // Apenas ADMIN pode acessar
-                        .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN") // USER e ADMIN podem acessar
-                        .requestMatchers("/api/users/**").hasRole("ADMIN") // Apenas ADMIN pode acessar usuários
-                        .requestMatchers("/api/areas/**").hasAnyRole("USER", "ADMIN") // Apenas ADMIN pode acessar usuários
-                        .requestMatchers("/api/mongoData/**").hasAnyRole("USER", "ADMIN") // Apenas ADMIN pode acessar usuários
-                        .requestMatchers("/api-docs/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll() // Swagger público
-                        .anyRequest().authenticated() // Qualquer outra rota requer autenticação
+                .authorizeHttpRequests(
+                        authorizationManagerRequestMatcherRegistry -> authorizationManagerRequestMatcherRegistry
+                                .requestMatchers(HttpMethod.DELETE).hasRole("ADMIN")
+                                .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/logout",
+                                        "/api/auth/refreshtoken")
+                                .permitAll()
+                                .requestMatchers("/api/users/**").hasRole("ADMIN")
+                                .requestMatchers("/api/auth/token-validity/**").hasRole("ADMIN")
+                                .requestMatchers("/api/auth/revoke-tokens/**").hasRole("ADMIN")
+                                // .requestMatchers("/api/areas/**").hasAnyRole("USER", "ADMIN")
+                                // .requestMatchers("/api/mongoData/**").hasAnyRole("USER", "ADMIN")
+                                .requestMatchers("/api-docs/**", "/swagger-ui/**", "/v3/api-docs/**",
+                                        "/swagger-ui.html")
+                                .permitAll() // Swagger público
+                                .anyRequest().authenticated() // Qualquer outra rota requer autenticação
                 )
-                .httpBasic(Customizer.withDefaults()) 
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Adiciona o filtro JWT
+                .httpBasic(Customizer.withDefaults())
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Adiciona o
+                                                                                                      // filtro JWT
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)); // Stateless
 
         return http.build();

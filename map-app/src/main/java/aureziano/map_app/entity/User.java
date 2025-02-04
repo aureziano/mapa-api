@@ -1,5 +1,6 @@
 package aureziano.map_app.entity;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -56,15 +57,14 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String firstName;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinTable(
-        name = "users_roles",
-        joinColumns = {@JoinColumn(name = "user_id", referencedColumnName = "id")},
-        inverseJoinColumns = {@JoinColumn(name = "role_id", referencedColumnName = "id")}
-    )
-    private List<Role> roles = new ArrayList<>();
+    @Column(nullable = true, columnDefinition = "TIMESTAMP") // Permite NULL
+    private Instant tokenExpiration;
 
-    
+    @ManyToMany(fetch = FetchType.EAGER, cascade = { CascadeType.MERGE, CascadeType.PERSIST })
+    @JoinTable(name = "users_roles", joinColumns = {
+            @JoinColumn(name = "user_id", referencedColumnName = "id") }, inverseJoinColumns = {
+                    @JoinColumn(name = "role_id", referencedColumnName = "id") })
+    private List<Role> roles = new ArrayList<>();
 
     // Método para criptografar a senha antes de salvar no banco de dados
     public void setPassword(String password) {
@@ -108,6 +108,4 @@ public class User implements UserDetails {
     public boolean isEnabled() {
         return true; // Pode ser ajustado conforme a lógica
     }
-
-
 }

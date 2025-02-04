@@ -30,19 +30,29 @@ export const setAuthToken = (token) => {
 // Função para configurar interceptadores
 export const setupInterceptors = (setUser, navigate) => {
     api.interceptors.response.use(
-        (response) => response,
-        (error) => {
-            if (error.response && error.response.status === 401) {
-                console.warn('Token inválido ou expirado.');
-                localStorage.removeItem('authToken');
-                setUser({
-                    isLoggedIn: false,
-                    email: '',
-                    role: [],
-                    cpf: '',
-                    firstName: '',
-                });
-                navigate('/'); // Redireciona para login
+        response => response,
+        async error => {
+            const originalRequest = error.config;
+            
+            if (error.response?.status === 401 && !originalRequest._retry) {
+                try {
+                    // Tenta renovar o token automaticamente
+                    const refreshToken = localStorage.getItem('refreshToken');
+                    const response = await api.post('/api/auth/refreshtoken', { refreshToken });
+                    
+                    const { accessToken, refreshToken: newRefreshToken } = response.data;
+                    localStorage.setItem('authToken', accessToken);
+                    localStorage.setItem('refreshToken', newRefreshToken);
+                    
+                    originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+                    return api(originalRequest);
+                } catch (refreshError) {
+                    // Se falhar, força o logout
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('refreshToken');
+                    navigate('/login');
+                    return Promise.reject(refreshError);
+                }
             }
             return Promise.reject(error);
         }

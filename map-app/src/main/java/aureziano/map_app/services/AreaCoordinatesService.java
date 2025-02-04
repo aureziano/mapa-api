@@ -41,102 +41,97 @@ public class AreaCoordinatesService {
             if (area.getMongoId() == null) {
                 System.out.println("MongoId ausente para a área ID: " + area.getId());
                 return new GeoJsonResponse(
-                    String.valueOf(area.getId()),
-                    null,
-                    "red",
-                    "rgba(255, 0, 0, 0.3)",
-                    area.getDescription(),
-                    area.getName(),
-                    null
-                );
+                        String.valueOf(area.getId()),
+                        null,
+                        "red",
+                        "rgba(255, 0, 0, 0.3)",
+                        area.getDescription(),
+                        area.getName(),
+                        null);
             }
-    
+
             Optional<AreaCoordinates> areaCoordinatesOpt = coordinatesRepository.findById(area.getMongoId());
             if (areaCoordinatesOpt.isPresent()) {
                 AreaCoordinates areaCoordinates = areaCoordinatesOpt.get();
-                logger.info("Coordenadas retornadas do MongoDB: " + areaCoordinates.getCoordinates());
+                // logger.info("Coordenadas retornadas do MongoDB: " +
+                // areaCoordinates.getCoordinates());
                 GeoJsonPolygon geoJsonPolygon = areaCoordinates.getCoordinates();
-    
+
                 if (geoJsonPolygon != null && geoJsonPolygon.getCoordinates() != null) {
                     List<List<Double>> formattedCoordinates = geoJsonPolygon.getCoordinates().stream()
-                        .map(lineString -> lineString.getCoordinates().stream()
-                            .map(point -> List.of(point.getX(), point.getY()))
-                            .collect(Collectors.toList()))
-                        .flatMap(List::stream)
-                        .collect(Collectors.toList());
-    
+                            .map(lineString -> lineString.getCoordinates().stream()
+                                    .map(point -> List.of(point.getX(), point.getY()))
+                                    .collect(Collectors.toList()))
+                            .flatMap(List::stream)
+                            .collect(Collectors.toList());
+
                     return new GeoJsonResponse(
-                        String.valueOf(area.getId()),
-                        formattedCoordinates,
-                        "green",
-                        "rgba(1, 22, 9, 0.7)",
-                        area.getDescription(),
-                        area.getName(),
-                        area.getMongoId()
-                    );
+                            String.valueOf(area.getId()),
+                            formattedCoordinates,
+                            "green",
+                            "rgba(1, 22, 9, 0.7)",
+                            area.getDescription(),
+                            area.getName(),
+                            area.getMongoId());
                 } else {
                     System.out.println("Coordenadas inválidas ou ausentes para a área ID: " + area.getId());
                 }
             } else {
                 System.out.println("Nenhuma correspondência no MongoDB para a área ID: " + area.getId());
             }
-    
+
             return new GeoJsonResponse(
-                String.valueOf(area.getId()),
-                null,
-                "red",
-                "rgba(255, 0, 0, 0.3)",
-                area.getDescription(),
-                area.getName(),
-                area.getMongoId()
-            );
+                    String.valueOf(area.getId()),
+                    null,
+                    "red",
+                    "rgba(255, 0, 0, 0.3)",
+                    area.getDescription(),
+                    area.getName(),
+                    area.getMongoId());
         }).collect(Collectors.toList());
     }
-    
-    
+
     private GeoJsonPolygon convertStringToGeoJsonPolygon(String coordinatesString) {
         if (coordinatesString == null || coordinatesString.trim().isEmpty()) {
             throw new IllegalArgumentException("A string de coordenadas não pode ser vazia");
         }
-    
+
         coordinatesString = coordinatesString.replace("[[", "[").replace("]]", "]");
-    
+
         String[] coordinatePairs = coordinatesString.substring(1, coordinatesString.length() - 1)
-            .split("\\],\\[");
-    
+                .split("\\],\\[");
+
         List<Point> points = Arrays.stream(coordinatePairs)
-            .map(coord -> {
-                coord = coord.replace("[", "").replace("]", "");
-                String[] lngLat = coord.split(",");
-                if (lngLat.length != 2) {
-                    throw new IllegalArgumentException("Coordenadas mal formatadas: " + coord);
-                }
-                double longitude = Double.parseDouble(lngLat[0]);
-                double latitude = Double.parseDouble(lngLat[1]);
-                return new GeoJsonPoint(longitude, latitude);
-            })
-            .collect(Collectors.toList());
-    
+                .map(coord -> {
+                    coord = coord.replace("[", "").replace("]", "");
+                    String[] lngLat = coord.split(",");
+                    if (lngLat.length != 2) {
+                        throw new IllegalArgumentException("Coordenadas mal formatadas: " + coord);
+                    }
+                    double longitude = Double.parseDouble(lngLat[0]);
+                    double latitude = Double.parseDouble(lngLat[1]);
+                    return new GeoJsonPoint(longitude, latitude);
+                })
+                .collect(Collectors.toList());
+
         if (!points.get(0).equals(points.get(points.size() - 1))) {
             points.add(points.get(0)); // Fecha o polígono
         }
-    
+
         return new GeoJsonPolygon(points);
     }
-    
 
     public String saveCoordinates(String coordinatesString) {
         // Converter a string de coordenadas para GeoJsonPolygon
         GeoJsonPolygon geoJsonPolygon = convertStringToGeoJsonPolygon(coordinatesString);
-    
+
         // Criar um objeto AreaCoordinates e salvar as coordenadas
         AreaCoordinates areaCoordinates = new AreaCoordinates(geoJsonPolygon);
         coordinatesRepository.save(areaCoordinates); // Salva no repositório
-    
+
         // Retorna o ID gerado no MongoDB
         return areaCoordinates.getId();
     }
-    
 
     // Buscar coordenadas por ID
     public Optional<AreaCoordinates> findById(String id) {
@@ -147,7 +142,7 @@ public class AreaCoordinatesService {
     public void deleteById(String id) {
         Optional<AreaCoordinates> areaCoordinatesOpt = coordinatesRepository.findById(id);
         if (areaCoordinatesOpt.isPresent()) {
-            coordinatesRepository.deleteById(id);  // Exclui as coordenadas no MongoDB
+            coordinatesRepository.deleteById(id); // Exclui as coordenadas no MongoDB
             logger.info("Coordenadas excluídas com sucesso para o mongoId: " + id);
         } else {
             throw new IllegalArgumentException("Coordenadas não encontradas para o mongoId: " + id);
@@ -163,24 +158,24 @@ public class AreaCoordinatesService {
         Optional<AreaCoordinates> existingCoordinatesOpt = coordinatesRepository.findById(id);
         if (existingCoordinatesOpt.isPresent()) {
             AreaCoordinates existingCoordinates = existingCoordinatesOpt.get();
-    
+
             // Lógica de atualização
             GeoJsonPolygon currentPolygon = existingCoordinates.getCoordinates();
             GeoJsonPolygon newPolygon = convertStringToGeoJsonPolygon(newCoordinates);
-    
+
             if (currentPolygon != null && currentPolygon.equals(newPolygon)) {
                 logger.info("As coordenadas fornecidas são iguais às existentes. Nenhuma atualização será feita.");
                 // return false;
             }
-    
+
             existingCoordinates.setCoordinates(newPolygon);
             coordinatesRepository.save(existingCoordinates);
             logger.info("Coordenadas atualizadas com sucesso no MongoDB para ID " + id);
             return true;
         }
-    
+
         logger.warning("Coordenadas não encontradas para ID " + id);
         return false;
     }
-    
+
 }

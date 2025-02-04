@@ -23,6 +23,8 @@ const ManageUsers = () => {
     const { user } = useUser();
     const navigate = useNavigate();
     const { addNotification } = useNotification();
+    const [userTokenValidity, setUserTokenValidity] = useState({});
+
 
     const fetchUsers = useCallback(async () => {
         const token = localStorage.getItem('authToken');
@@ -38,7 +40,6 @@ const ManageUsers = () => {
             });
             const validUsers = response.data.filter(user => user.id != null);
             setUsers(validUsers);
-            console.log("users: ", response.data);
         } catch (err) {
             console.error('Erro ao buscar usuários:', err);
             if (err.response?.status === 401) {
@@ -67,6 +68,19 @@ const ManageUsers = () => {
         fetchUsers();
     }, [user, navigate, fetchUsers]);
 
+    // Função de formatação de tempo
+    const formatTime = (seconds) => {
+        if (seconds <= 0) return '00:00:00';
+
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        return [hours, minutes, secs]
+            .map(v => v < 10 ? "0" + v : v)
+            .join(":");
+    };
+
     const handleDeleteUser = async (userId) => {
         if (window.confirm('Tem certeza que deseja excluir este usuário?')) {
             const token = localStorage.getItem('authToken');
@@ -93,10 +107,25 @@ const ManageUsers = () => {
         setIsCreating(false);
     };
 
-    const handleViewUser = (user) => {
-        setViewingUser(user);
-        setEditingUser(null);
-        setIsCreating(false);
+    const handleViewUser = async (user) => {
+        try {
+            const response = await api.get(`/api/auth/token-validity/${user.id}`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` }
+            });
+
+            setUserTokenValidity(prev => ({
+                ...prev,
+                [user.id]: {
+                    access: response.data.accessTokenValidity,
+                    refresh: response.data.refreshTokenValidity
+                }
+            }));
+
+            setViewingUser(user);
+        } catch (error) {
+            console.error('Erro ao buscar validade dos tokens:', error);
+            addNotification('Não foi possível obter informações dos tokens', 'error');
+        }
     };
 
     const handleSaveUser = async (updatedUser) => {
@@ -134,13 +163,13 @@ const ManageUsers = () => {
             console.error('Token não encontrado');
             return;
         }
-    
+
         const cleanedCpf = newUser.cpf.replace(/\D/g, '');
         if (!isValidCPF(cleanedCpf)) {
             addNotification('CPF inválido', 'error');
             return;
         }
-    
+
         try {
             const response = await api.post('/api/users/register', {
                 ...newUser,
@@ -148,7 +177,7 @@ const ManageUsers = () => {
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-    
+
             setUsers((prevUsers) => [...prevUsers, response.data]);
             setIsCreating(false);
             setNewUser({
@@ -159,7 +188,7 @@ const ManageUsers = () => {
                 password: '',
                 roles: ['ROLE_USER']
             });
-            addNotification('Usuário criado com sucesso!', 'success');
+            addNotification('Usuário criado com sucesso!', 'sucess');
         } catch (err) {
             console.error('Erro ao criar usuário:', err);
             addNotification('Erro ao criar usuário', 'error');
@@ -169,25 +198,25 @@ const ManageUsers = () => {
     const isValidCPF = (cpf) => {
         cpf = cpf.replace(/[^\d]+/g, '');
         if (cpf.length !== 11 || !!cpf.match(/(\d)\1{10}/)) return false;
-        
+
         let sum = 0;
         let remainder;
-        
-        for (let i = 1; i <= 9; i++) 
-            sum = sum + parseInt(cpf.substring(i-1, i)) * (11 - i);
+
+        for (let i = 1; i <= 9; i++)
+            sum = sum + parseInt(cpf.substring(i - 1, i)) * (11 - i);
         remainder = (sum * 10) % 11;
-        
+
         if ((remainder === 10) || (remainder === 11)) remainder = 0;
         if (remainder !== parseInt(cpf.substring(9, 10))) return false;
-        
+
         sum = 0;
-        for (let i = 1; i <= 10; i++) 
-            sum = sum + parseInt(cpf.substring(i-1, i)) * (12 - i);
+        for (let i = 1; i <= 10; i++)
+            sum = sum + parseInt(cpf.substring(i - 1, i)) * (12 - i);
         remainder = (sum * 10) % 11;
-        
+
         if ((remainder === 10) || (remainder === 11)) remainder = 0;
         if (remainder !== parseInt(cpf.substring(10, 11))) return false;
-        
+
         return true;
     };
 
@@ -288,7 +317,30 @@ const ManageUsers = () => {
                     <p><strong>Email:</strong> {viewingUser.email}</p>
                     <p><strong>CPF:</strong> {viewingUser.cpf}</p>
                     <p><strong>Roles:</strong> {viewingUser.roles.join(', ')}</p>
-                    <button onClick={() => setViewingUser(null)}><FaTimes /> Fechar</button>
+
+                    <div className="token-info-section">
+                        <h3>Informações de Sessão</h3>
+                        <div className="token-timers">
+                            <div className="token-timer">
+                                <span className="timer-label">Access Token:</span>
+                                <span className="timer-value">
+                                    {formatTime(userTokenValidity[viewingUser.id]?.access || 0)}
+                                </span>
+                            </div>
+                            <div className="timer-divider"></div>
+                            <div className="token-timer">
+                                <span className="timer-label">Refresh Token:</span>
+                                <span className="timer-value">
+                                    {formatTime(userTokenValidity[viewingUser.id]?.refresh || 0)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <button onClick={() => setViewingUser(null)}>
+                        <FaTimes /> Fechar
+                    </button>
                 </div>
             )}
             {isCreating && (

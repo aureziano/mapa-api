@@ -17,33 +17,35 @@ const LoginForm = ({ onLoginSuccess }) => {
                 username: cleanCPF(username), 
                 password 
             });
-
-            if (response.data && response.data.token) {
-                const { token } = response.data;
-                localStorage.setItem('authToken', token);
-                setAuthToken(token);
-
+    
+            if (response.data?.accessToken && response.data?.refreshToken) {
+                const { accessToken, refreshToken } = response.data;
+                
+                localStorage.setItem('authToken', accessToken);
+                localStorage.setItem('refreshToken', refreshToken);
+                setAuthToken(accessToken);
+    
                 if (typeof onLoginSuccess === 'function') {
-                    onLoginSuccess();
+                    onLoginSuccess(accessToken);
                 }
-                addNotification("Login bem-sucedido!", "success");
+                addNotification("Login bem-sucedido!", "sucess");
             } else {
-                addNotification("Não foi possível obter o token.", "Erro");
+                addNotification("Resposta inválida do servidor", "error");
             }
         } catch (error) {
             if (error.response) {
-                console.error('Erro na requisição:', error.response);
-                alert(`Erro: ${error.response.data.message || 'Credenciais inválidas'}`);
+                // Erros 4xx/5xx
+                addNotification(error.response.data?.message || "Credenciais inválidas", "error");
             } else if (error.request) {
-                console.error('Erro na requisição: Sem resposta do servidor', error.request);
-                alert('Erro de conexão: O servidor não respondeu. Tente novamente mais tarde.');
+                // Sem resposta do servidor
+                addNotification("Servidor não respondeu", "error");
             } else {
-                console.error('Erro desconhecido:', error);
-                alert('Ocorreu um erro ao tentar fazer login. Tente novamente mais tarde.');
+                // Erros de configuração
+                addNotification("Erro ao configurar requisição", "error");
             }
         }
     };
-
+    
     const handleRegisterRedirect = () => {
         navigate('/register');
     };

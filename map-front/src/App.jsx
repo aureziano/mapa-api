@@ -17,13 +17,12 @@ import { useNotification } from './components/NotificationProvider';
 import TestModal from './components/TesteModal';
 
 const App = () => {
-    const { user, setUser } = useUser();
+    const { user, setUser } = useUser(); // Remova o login desnecessário
     const { addNotification } = useNotification();
     const navigate = useNavigate();
     const location = useLocation();
     const [currentPage, setCurrentPage] = useState('');
 
-    // Mapeamento memoizado das rotas para títulos
     const pageTitles = useMemo(() => ({
         '/dashboard': 'Dashboard',
         '/map-view': 'Visualização de Mapa',
@@ -32,32 +31,32 @@ const App = () => {
         '/users': 'Gestão de Usuários'
     }), []);
 
-    // Atualiza o título da página quando a rota muda
     useEffect(() => {
         setCurrentPage(pageTitles[location.pathname] || '');
     }, [location.pathname, pageTitles]);
 
-    // Função para logout
     const handleLogout = useCallback(() => {
-        addNotification("Logout realizado.", "success");
+        addNotification("Logout realizado.", "sucess");
         setUser({
             isLoggedIn: false,
+            id: '',
             email: '',
             role: [],
             cpf: '',
             firstName: '',
         });
         localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
         navigate('/');
     }, [addNotification, setUser, navigate]);
 
-    // Efeito para verificação do token
     useEffect(() => {
         const token = localStorage.getItem('authToken');
+        const refreshToken = localStorage.getItem('refreshToken');
 
         const verifyToken = async () => {
-            if (!token) {
-                navigate('/');
+            if (!token || !refreshToken) {
+                handleLogout();
                 return;
             }
 
@@ -72,6 +71,7 @@ const App = () => {
 
                 setUser({
                     isLoggedIn: true,
+                    id: decodedToken.id || '',
                     email: decodedToken.sub || 'Email não fornecido',
                     role: decodedToken.roles || [],
                     cpf: decodedToken.cpf || 'Não informado',
@@ -87,33 +87,23 @@ const App = () => {
         setupInterceptors(setUser, navigate);
     }, [navigate, setUser, handleLogout]);
 
-    const handleLoginSuccess = () => {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            try {
-                const decodedToken = jwtDecode(token);
-                setUser({
-                    isLoggedIn: true,
-                    email: decodedToken.sub,
-                    role: decodedToken.roles,
-                    cpf: decodedToken.cpf,
-                    firstName: decodedToken.firstName,
-                });
-                navigate('/dashboard');
-            } catch (error) {
-                console.error('Erro ao decodificar o token:', error);
-            }
-        }
-    };
+    const handleLoginSuccess = useCallback((accessToken) => {
+        const decoded = jwtDecode(accessToken);
+        setUser({
+            isLoggedIn: true,
+            id: decoded.id,
+            email: decoded.sub,
+            role: decoded.roles,
+            cpf: decoded.cpf,
+            firstName: decoded.firstName,
+        });
+        navigate('/dashboard');
+    }, [navigate, setUser]);
 
     return (
         <div>
             {user.isLoggedIn && (
                 <HeaderWithMenu
-                    username={user.email}
-                    role={user.role}
-                    cpf={user.cpf}
-                    firstName={user.firstName}
                     onLogout={handleLogout}
                     currentPage={currentPage}
                 />
@@ -122,37 +112,12 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<LoginForm onLoginSuccess={handleLoginSuccess} />} />
                 <Route path="/register" element={<RegisterForm />} />
-                
-                <Route path="/dashboard" element={
-                    // <AdminRoute>
-                        <Dashboard />
-                    // </AdminRoute>
-                } />
-                
-                <Route path="/map-view" element={
-                    // <AdminRoute>
-                        <MapView />
-                    // </AdminRoute>
-                } />
-                
-                <Route path="/manage" element={
-                    <AdminRoute>
-                        <ManagePointsAreas />
-                    </AdminRoute>
-                } />
-                
-                <Route path="/userspage" element={
-                    <AdminRoute>
-                        <UsersPage />
-                    </AdminRoute>
-                } />
-                
-                <Route path="/users" element={
-                    <AdminRoute>
-                        <ManageUsers />
-                    </AdminRoute>
-                } />
-                
+
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/map-view" element={<MapView />} />
+                <Route path="/manage" element={<AdminRoute><ManagePointsAreas /></AdminRoute>} />
+                <Route path="/userspage" element={<AdminRoute><UsersPage /></AdminRoute>} />
+                <Route path="/users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
                 <Route path="/teste" element={<TestModal />} />
             </Routes>
         </div>
