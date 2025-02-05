@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import 'leaflet/dist/leaflet.css';
 import './MapView.css';
-import api from '../services/api';
-import GenericMapView, { formatPolygons } from './GenericMapView';
+import api from '../../../services/api';
+import GenericMapView, { formatPolygons } from '../../map/GenericMapView/GenericMapView';
 
 const MapView = () => {
     const [statePolygons, setStatePolygons] = useState([]);
@@ -14,7 +14,7 @@ const MapView = () => {
     useEffect(() => {
         const fetchStatePolygons = async () => {
             try {
-                const response = await api.get('/api/mongoData/polygonsEstado');
+                const response = await api.get('/api/mongoData/polygonsEstado'); 
                 const formattedPolygons = formatPolygons(response.data);
                 setStatePolygons(formattedPolygons);
             } catch (error) {

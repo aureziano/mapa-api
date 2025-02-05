@@ -1,5 +1,7 @@
 package aureziano.map_app.controller;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,8 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import aureziano.map_app.dto.UserDto;
 import aureziano.map_app.entity.User;
+import aureziano.map_app.repository.UserRepository;
 import aureziano.map_app.services.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 
 // @CrossOrigin(origins = "http://localhost:3000")
@@ -53,29 +57,28 @@ public class UserController {
         // Verificar erros de validação
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream()
-                .map(error -> {
-                    if (error instanceof FieldError) {
-                        return ((FieldError) error).getField() + ": " + error.getDefaultMessage();
-                    }
-                    return error.getDefaultMessage();
-                })
-                .collect(Collectors.toList());
-            
+                    .map(error -> {
+                        if (error instanceof FieldError) {
+                            return ((FieldError) error).getField() + ": " + error.getDefaultMessage();
+                        }
+                        return error.getDefaultMessage();
+                    })
+                    .collect(Collectors.toList());
+
             logger.error("Erros de validação ao registrar usuário: {}", errors);
             return ResponseEntity.badRequest().body(errors);
         }
 
         try {
-            UserDto savedUser = userService.saveUser(userDto); 
+            UserDto savedUser = userService.saveUser(userDto);
             logger.info("Usuário registrado com sucesso: {}", savedUser);
             return ResponseEntity.ok(savedUser);
         } catch (Exception e) {
             logger.error("Erro ao salvar usuário: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Ocorreu um erro ao registrar o usuário: " + e.getMessage());
+                    .body("Ocorreu um erro ao registrar o usuário: " + e.getMessage());
         }
     }
-
 
     @Tag(name = "Get All Users", description = "Get all users")
     @GetMapping("/all")
@@ -84,7 +87,6 @@ public class UserController {
         List<UserDto> users = userService.findAllUsers();
         return ResponseEntity.ok(users);
     }
-
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable(required = false) Long userId) {
@@ -97,41 +99,46 @@ public class UserController {
         } catch (Exception e) {
             logger.error("Erro ao deletar usuário: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Ocorreu um erro ao deletar o usuário: " + e.getMessage());
+                    .body("Ocorreu um erro ao deletar o usuário: " + e.getMessage());
         }
     }
 
-
     @PutMapping("/{userId}")
-    public ResponseEntity<?> updateUser(@PathVariable Long userId, @Valid @RequestBody UserDto userDto, BindingResult result) {
-        // Filtra os erros, excluindo o erro de senha se a senha estiver vazia
-        List<FieldError> filteredErrors = result.getFieldErrors().stream()
-            .filter(error -> !("password".equals(error.getField()) && (userDto.getPassword() == null || userDto.getPassword().isEmpty())))
-            .collect(Collectors.toList());
+    public ResponseEntity<?> updateUser(@PathVariable Long userId, @RequestBody UserDto userDto,
+            BindingResult result) {
+        // Primeiro busca o usuário existente
+        User existingUser = userService.findUserById(userId);
 
-        if (!filteredErrors.isEmpty()) {
-            List<String> errorMessages = filteredErrors.stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.toList());
-            
-            logger.error("Erros de validação ao atualizar usuário: {}", errorMessages);
-            return ResponseEntity.badRequest().body(errorMessages);
+        // Define o tokenExpiration ANTES da validação
+        if (userDto.getTokenExpiration() == null) {
+            userDto.setTokenExpiration(
+                    (existingUser != null && existingUser.getTokenExpiration() != null)
+                            ? existingUser.getTokenExpiration()
+                            : Instant.now().minus(Duration.ofDays(1)));
+        }
+
+        // Filtra erros de validação
+        if (result.hasErrors()) {
+            List<String> errors = result.getFieldErrors().stream()
+                    .filter(error -> !"password".equals(error.getField()))
+                    .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.badRequest().body(errors);
         }
 
         try {
             UserDto updatedUser = userService.updateUser(userId, userDto);
-            logger.info("Usuário atualizado com sucesso: {}", updatedUser);
             return ResponseEntity.ok(updatedUser);
         } catch (Exception e) {
             logger.error("Erro ao atualizar usuário: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Ocorreu um erro ao atualizar o usuário: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                    .body("Erro na atualização: " + e.getMessage());
         }
     }
 
-
     @RequestMapping(method = RequestMethod.OPTIONS)
     public ResponseEntity<?> preflight() {
-        return ResponseEntity.ok().build(); 
+        return ResponseEntity.ok().build();
     }
 }

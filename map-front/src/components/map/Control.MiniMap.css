@@ -9,7 +9,7 @@
 }
 
 .leaflet-control-minimap-toggle-display {
-    background-image: url("images/toggle.svg");
+    background-image: url("../../assets/images/toggle.png");
     background-size: cover;
     position: absolute;
     border-radius: 3px 0px 0px 0px;
@@ -47,7 +47,7 @@
 }
 
 .leaflet-oldie .leaflet-control-minimap-toggle-display{
-	background-image: url("images/toggle.png");
+	background-image: url("../../assets/images/toggle.png");
 }
 
 .leaflet-control-minimap-toggle-display-bottomright {

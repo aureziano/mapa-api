@@ -15,6 +15,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
 
 @Getter
 @Setter
@@ -38,7 +40,8 @@ public class UserDto {
     @NotEmpty(message = "Password should not be empty")
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
-    @NotEmpty
+    // @NotNull(message = "Token expiration cannot be null")
+    @PastOrPresent(message = "Token expiration must be in the past or present")
     private Instant tokenExpiration;
 
     // Campos opcionais para IP e informações do dispositivo

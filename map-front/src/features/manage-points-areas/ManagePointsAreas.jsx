@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from 'react-bootstrap';
 import { FaTimes, FaEdit, FaEye, FaTrash, FaAtlas, FaPen, FaSave } from 'react-icons/fa';
-import api from '../services/api';
-import { useNotification } from './NotificationProvider';
-import GenericMapView, { formatPolygons, getValidatedCentroid } from './GenericMapView';
+import api from '../../services/api';
+import { useNotification } from '../../components/layout/Notification/NotificationProvider'; 
+import GenericMapView, { formatPolygons, getValidatedCentroid } from '../../components/map/GenericMapView/GenericMapView';
 import L from 'leaflet';
 import './ManagePointsAreas.css';
 
@@ -19,7 +19,7 @@ const ManagePointsAreas = () => {
   const [editing, setEditing] = useState(false);
   const { addNotification, setLoading } = useNotification();
   const [selectedPolygon, setSelectedPolygon] = useState(null);
-  const [IsMapReady, setIsMapReady] = useState(false);
+  const [IsMapReady , setIsMapReady] = useState(false);
   const [areaInCreation] = useState(false);
   const [originalCoordinates, setOriginalCoordinates] = useState(null);
   const [tableData, setTableData] = useState([]);

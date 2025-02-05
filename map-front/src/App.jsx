@@ -1,20 +1,19 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Route, Routes, useNavigate, useLocation } from 'react-router-dom';
-import LoginForm from './components/LoginForm';
-import RegisterForm from './components/RegisterForm';
-import Dashboard from './components/Dashboard';
-import MapView from './components/MapView';
-import ManagePointsAreas from './components/ManagePointsAreas';
-import UsersPage from './components/UsersPage';
-import AdminRoute from './components/AdminRoute';
-import HeaderWithMenu from './components/HeaderWithMenu';
+import LoginForm from './components/users/LoginForm/LoginForm';
+import RegisterForm from './components/users/RegisterForm/RegisterForm';
+import Dashboard from './features/dashboard/Dashboard';
+import MapView from './components/map/MapView/MapView';
+import ManagePointsAreas from './features/manage-points-areas/ManagePointsAreas'; ///components/ManagePointsAreas';
+import UsersPage from './views/UsersPage/UsersPage';
+import AdminRoute from './components/common/AdminRoute/AdminRoute';
+import HeaderWithMenu from './components/layout/HeaderWithMenu/HeaderWithMenu';
 import jwtDecode from 'jwt-decode';
 import { useUser } from './context/UserContext';
-import './App.css';
+import './assets/styles/App.css';
 import { setupInterceptors } from './services/api';
-import ManageUsers from './components/ManageUsers';
-import { useNotification } from './components/NotificationProvider';
-import TestModal from './components/TesteModal';
+import ManageUsers from './features/manage-users/ManageUsers';
+import { useNotification } from './components/layout/Notification/NotificationProvider';
 
 const App = () => {
     const { user, setUser } = useUser(); // Remova o login desnecessário
@@ -118,7 +117,7 @@ const App = () => {
                 <Route path="/manage" element={<AdminRoute><ManagePointsAreas /></AdminRoute>} />
                 <Route path="/userspage" element={<AdminRoute><UsersPage /></AdminRoute>} />
                 <Route path="/users" element={<AdminRoute><ManageUsers /></AdminRoute>} />
-                <Route path="/teste" element={<TestModal />} />
+                {/* <Route path="/teste" element={<TestModal />} /> */}
             </Routes>
         </div>
     );

@@ -11,7 +11,7 @@ import {
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
-import './Control.MiniMap.css';
+import '../Control.MiniMap.css';
 import 'leaflet-minimap';
 import 'leaflet-draw';
 import { EditControl } from 'react-leaflet-draw';

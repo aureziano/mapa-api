@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import api from '../services/api';
-import { useNotification } from './NotificationProvider';
+import api from '../../../services/api';
+import { useNotification } from '../../layout/Notification/NotificationProvider';
 import './RegisterForm.css';
 
 const RegisterForm = () => {
@@ -9,7 +9,7 @@ const RegisterForm = () => {
     const [email, setEmail] = useState('');
     const [cpf, setCpf] = useState('');
     const [password, setPassword] = useState('');
-    const { addNotification, setLoading } = useNotification();
+    const { addNotification } = useNotification();
 
     const handleSubmit = async (e) => {
         e.preventDefault();

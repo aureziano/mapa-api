@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api, { setAuthToken } from '../services/api';
-import { useNotification } from "./NotificationProvider";
+import api, { setAuthToken } from '../../../services/api';
+import { useNotification } from "../../layout/Notification/NotificationProvider";
 import './LoginForm.css';
 
 const LoginForm = ({ onLoginSuccess }) => {

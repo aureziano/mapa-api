@@ -1,28 +1,23 @@
-# Base Tomcat com JDK 17
+# Build stage
+FROM maven:3.8.6-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -DskipTests
+
+# Runtime stage
 FROM tomcat:9.0-jdk17
-
-# Instalar ferramentas de rede (ssh, netcat, telnet)
 RUN apt-get update && apt-get install -y \
-    openssh-client \
-    telnet \
     netcat-openbsd \
-    && apt-get clean
+    && rm -rf /var/lib/apt/lists/*
 
-ARG JAR_FILE=target/*.war  
-COPY ${JAR_FILE} app.war  
+COPY --from=build /app/target/*.war /usr/local/tomcat/webapps/ROOT.war
+COPY wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
 
-# Copiar o arquivo .war gerado para o diretório webapps do Tomcat
-COPY app.war  /usr/local/tomcat/webapps/
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl -f http://localhost:8086/actuator/health || exit 1
 
-# # Copiar o script de inicialização
-# COPY init_ssh.sh /usr/local/tomcat/init_ssh.sh
-# RUN chmod +x /usr/local/tomcat/init_ssh.sh
-
-# Configurar o diretório de trabalho
-WORKDIR /usr/local/tomcat
-
-# Expor a porta 8080
 EXPOSE 8080
-
-# # Comando para iniciar o Tomcat com o script de inicialização
-CMD ["/bin/sh", "-c", "catalina.sh run"]
+CMD ["/wait-for-it.sh", "mysql:3306", "--", "/wait-for-it.sh", "mongodb:27017", "--", "catalina.sh", "run"]

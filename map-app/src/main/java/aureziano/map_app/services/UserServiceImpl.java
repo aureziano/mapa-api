@@ -9,6 +9,8 @@ import aureziano.map_app.entity.User;
 import aureziano.map_app.repository.RoleRepository;
 import aureziano.map_app.repository.UserRepository;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -121,6 +123,14 @@ public class UserServiceImpl implements UserService {
         // Atualiza a senha apenas se uma nova senha for fornecida
         if (userDto.getPassword() != null && !userDto.getPassword().isEmpty()) {
             user.setPassword(userDto.getPassword());
+        }
+
+        // Garante o tokenExpiration
+        if (userDto.getTokenExpiration() == null) {
+            userDto.setTokenExpiration(
+                    user.getTokenExpiration() != null
+                            ? user.getTokenExpiration()
+                            : Instant.now().minus(Duration.ofDays(1)));
         }
 
         // Atualiza os campos do usuário

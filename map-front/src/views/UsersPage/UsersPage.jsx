@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import api, { setAuthToken } from '../services/api';
+import { useUser } from '../../context/UserContext';
+import api, { setAuthToken } from '../../services/api';
 
 const UsersPage = () => {
     const [users, setUsers] = useState([]);

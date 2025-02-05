@@ -1,70 +1,95 @@
-version: '3.8'
-
 services:
-  # Frontend (React)
   frontend:
+    container_name: frontend
     build:
       context: ./map-front
       dockerfile: Dockerfile
+    
     ports:
       - "80:80"
-    depends_on:
-      - backend
     networks:
       - app-network
+    depends_on:
+      backend:
+        condition: service_healthy
 
-  # Backend (Spring Boot + Tomcat)
   backend:
+    container_name: backend
     build:
       context: ./map-app
       dockerfile: Dockerfile
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3310/teste
-      - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=150202
-      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/areasdb
-      - SPRING_DATA_MONGODB_DATABASE=areasdb
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/teste
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: "150202"
+      SPRING_DATA_MONGODB_URI: mongodb://admin:password@mongodb:27017/areasdb
     ports:
-      - "8080:8080"
-    depends_on:
-      - mysql
-      - mongodb
+      - "8086:8080"
     networks:
       - app-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # MySQL
+
   mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_ROOT_PASSWORD: 150202
-      MYSQL_DATABASE: teste
+    image: mysql:8.0.36
+    container_name: mysql-3311
+    restart: always
+    command:
+      [
+        "--lower_case_table_names=1",
+        "--max-allowed-packet=128M",
+        "--innodb-log-file-size=64M",
+        "--character-set-server=utf8mb4",
+        "--collation-server=utf8mb4_unicode_ci",
+        "--bind-address=0.0.0.0"
+      ]
     ports:
-      - "3310:3306"
+      - "3311:3306"
     networks:
       - app-network
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./map-app/sql:/docker-entrypoint-initdb.d
+    environment:
+      MYSQL_ROOT_PASSWORD: "150202"
+      MYSQL_DATABASE: teste
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-p150202", "-h", "127.0.0.1"]
+  
 
-  # MongoDB
   mongodb:
-    image: mongo:latest
+    container_name: mongo-27018
+    image: mongo:6.0
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
-      MONGO_INITDB_DATABASE: areasdb
-    ports:
-      - "27017:27017"
-    networks:
-      - app-network
     volumes:
       - mongodb_data:/data/db
+      - ./map-app/mongo/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+      - ./map-app/mongo/areasdb.areaEstado.json:/docker-entrypoint-initdb.d/areasdb.areaEstado.json
+    ports:
+      - "27018:27017"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok", "-u", "admin", "-p", "password"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-# Definir a rede compartilhada entre os contêineres
-networks:
-  app-network:
-    driver: bridge
-
-# Volumes persistentes para bancos de dados
 volumes:
   mysql_data:
   mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge

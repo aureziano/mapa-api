@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import api from '../services/api';
+import api from '../../services/api';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
-import { useNotification } from './NotificationProvider';
+import { useUser } from '../../context/UserContext';
+import { useNotification } from '../../components/layout/Notification/NotificationProvider';
 import { FaTimes, FaEdit, FaEye, FaTrash, FaAtlas, FaSave, FaUserPlus } from 'react-icons/fa';
 import './ManageUsers.css';
 

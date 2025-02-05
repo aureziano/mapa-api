@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { FaHome, FaMapMarkedAlt, FaCogs, FaUsers, FaBars, FaClock } from 'react-icons/fa';
 import jwtDecode from 'jwt-decode';
-import { useUser } from '../context/UserContext';
-import { useNotification} from './NotificationProvider';
+import { useUser } from '../../../context/UserContext';
+import { useNotification} from '../Notification/NotificationProvider';
 import './HeaderWithMenu.css';
 
 const pageDescriptions = {

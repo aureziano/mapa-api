@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, useCallback, useRef } from 'react';
 import api from '../services/api';
-import { useNotification } from "../components/NotificationProvider";
+import { useNotification } from "../components/layout/Notification/NotificationProvider";
 import { useNavigate } from 'react-router-dom';
 import jwtDecode from 'jwt-decode';
 

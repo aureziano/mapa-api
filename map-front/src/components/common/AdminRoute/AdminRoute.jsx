@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useUser } from '../context/UserContext';
+import { useUser } from '../../../context/UserContext';
 
 const AdminRoute = ({ children }) => {
     const { user } = useUser();
