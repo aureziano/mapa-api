@@ -21,6 +21,17 @@ Este projeto consiste em uma aplicação de mapeamento com frontend em React e b
 ├── map-app/
 │   ├── Dockerfile
 │   ├── pom.xml
+├── tomcat/
+│   │   ├── conf/
+│   │   |   ├── tomcat-users.xml
+│   │   |   ├── tomcat-users.xsd
+│   │   |   ├── context.xml
+│   │   |   └── server.xml
+│   │   └── webapps/
+│   │       ├── docs/
+│   │       ├── examples/
+│   │       ├── host-manager/
+│   │       └── manager/
 │   ├── sql/
 │   │   ├── 01-create-roles.sql
 │   │   ├── 02-create-users.sql
